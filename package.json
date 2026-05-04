@@ -1,0 +1,21 @@
+{
+  "name": "whatsapp-deals-bot",
+  "version": "1.0.0",
+  "description": "Disparo diário de ofertas em grupos de WhatsApp",
+  "author": "Rafael Molina Martinez",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [
+    "whatsapp",
+    "automation"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "pg": "^8.20.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.34.7"
+  }
+}
