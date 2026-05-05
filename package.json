@@ -4,7 +4,12 @@
   "description": "Disparo diário de ofertas em grupos de WhatsApp",
   "author": "Rafael Molina Martinez",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "start": "node src/core/index.js",
+    "dev": "nodemon src/core/index.js",
+    "seed:tokens": "node src/scripts/seedTokens.js",
+    "test:catalog": "node src/scripts/teste-catalog.js"
+  },
   "keywords": [
     "whatsapp",
     "automation"
@@ -13,6 +18,7 @@
   "type": "module",
   "dependencies": {
     "dotenv": "^17.4.2",
+    "nodemon": "^3.1.14",
     "pg": "^8.20.0",
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",

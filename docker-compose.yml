@@ -4,9 +4,9 @@ services:
     container_name: deals_postgres
     restart: always
     environment:
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASS:-minhasenha}
-      POSTGRES_DB: ${DB_NAME:-deals_db}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: minhasenha
+      POSTGRES_DB: deals_db
     ports:
       - "5432:5432"
     volumes:
