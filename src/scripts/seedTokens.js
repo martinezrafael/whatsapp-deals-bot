@@ -3,8 +3,6 @@ import pool from "../config/database.js";
 
 async function seedTokens() {
   try {
-    console.log("🌱 Iniciando inserção do token inicial...");
-
     await pool.query("DELETE FROM auth_tokens");
 
     const query = `
@@ -23,12 +21,9 @@ async function seedTokens() {
 
     await pool.query(query, [accessToken, refreshToken, expiresAt]);
 
-    console.log("Token inicial inserido com sucesso!");
-    console.log(`Expiração definida para: ${expiresAt.toLocaleString()}`);
-
     process.exit(0);
   } catch (err) {
-    console.error("❌ Erro ao inserir token:", err);
+    console.error("Erro ao inserir token:", err);
     process.exit(1);
   }
 }

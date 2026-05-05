@@ -45,16 +45,14 @@ export async function refreshMyToken(storedRefreshToken) {
 
     const data = await response.json();
 
-    // Se a API retornar um erro (ex: refresh_token expirado ou revogado)
     if (data.error) {
-      console.error("❌ Erro da API Mercado Livre:", data);
+      console.error("Erro da API Mercado Livre:", data);
       throw new Error(data.message || data.error);
     }
 
     return data;
   } catch (error) {
-    // Captura erros de rede (ex: DNS, timeout)
-    console.error("❌ Erro de conexão ao renovar token:", error.message);
+    console.error("Erro de conexão ao renovar token:", error.message);
     throw error;
   }
 }

@@ -8,11 +8,7 @@ import { refreshMyToken } from "./auth.js";
 import { searchProduct, saveCatalogToDb } from "../database/catalog.js";
 import { gerarLinkAfiliado } from "../services/mercadolivre.js";
 
-/**
- * Gerencia a renovação do Token de Acesso.
- */
 async function validarEObterToken() {
-  console.log("🔑 [Token] Verificando validade...");
   try {
     const { rows } = await pool.query("SELECT * FROM auth_tokens LIMIT 1");
     const tokens = rows[0];
@@ -23,7 +19,6 @@ async function validarEObterToken() {
     const expiraEm = new Date(tokens.expires_at);
 
     if (expiraEm <= limiteRenovacao) {
-      console.log("🔄 [Token] Renovando...");
       const novosDados = await refreshMyToken(tokens.refresh_token);
       const novaExpira = new Date(Date.now() + novosDados.expires_in * 1000);
 
@@ -40,30 +35,23 @@ async function validarEObterToken() {
     }
     return tokens.access_token;
   } catch (error) {
-    console.error("❌ [Token] Erro detalhado:", error);
+    console.error("[Token] Erro:", error.message);
     throw error;
   }
 }
 
-/**
- * Busca anúncios e alimenta o banco de dados.
- */
 async function alimentarFilaDeOfertas(termoBusca) {
-  console.log(`🚀 [Fila] Iniciando busca para: "${termoBusca}"`);
   try {
     const token = await validarEObterToken();
     const data = await searchProduct(termoBusca, token);
+
     const results = data?.results || [];
 
-    if (results.length === 0)
-      return console.log("⚠️ [Fila] Nada encontrado na API do ML.");
+    if (results.length === 0) return console.log("⚠️ [Fila] Nada encontrado.");
 
-    console.log(
-      `📦 [Fila] Sincronizando ${results.length} itens com o banco...`,
-    );
     await saveCatalogToDb(results, pool);
 
-    for (const prod of results) {
+    for (const [index, prod] of results.entries()) {
       try {
         const precoVenda = prod.price || 0;
         const urlOriginal = prod.permalink;
@@ -79,29 +67,21 @@ async function alimentarFilaDeOfertas(termoBusca) {
            ON CONFLICT (link_original) DO NOTHING`,
           [prod.id, prod.title, precoVenda, linkCurto, urlOriginal],
         );
-        process.stdout.write(`.`);
+
+        process.stdout.write(`.`); // Progresso visual simples
+        await new Promise((res) => setTimeout(res, 1000));
       } catch (err) {
-        console.error(`\n❌ [Fila] Erro no item ${prod.id}:`, err.message);
+        console.error(`\n Erro no item ${prod.id}:`, err.message);
       }
     }
-    console.log("\n🏁 [Fila] Processamento concluído.");
   } catch (error) {
-    console.error("❌ [Fila] Erro Crítico:", error);
+    console.error("[Fila] Erro crítico:", error.message);
   }
 }
 
-/**
- * Envia a oferta para o WhatsApp.
- */
 async function processarUmaOferta() {
-  console.log("📡 [WhatsApp] Verificando se há ofertas pendentes...");
   try {
     const chatID = process.env.GROUP_ID;
-    if (!chatID) {
-      console.error("❌ [WhatsApp] GROUP_ID não definido no .env");
-      return;
-    }
-
     const { rows } = await pool.query(`
       SELECT o.*, c.nome_oficial, c.marca, c.imagem_high_res, c.raw_data
       FROM ofertas o
@@ -111,13 +91,10 @@ async function processarUmaOferta() {
     `);
 
     if (rows.length === 0) {
-      console.log("📭 Fila vazia no banco.");
       return await alimentarFilaDeOfertas("Café Especial Moído");
     }
 
     const oferta = rows[0];
-    console.log(`📤 [WhatsApp] Preparando envio: ${oferta.nome_oficial}`);
-
     const attr = (id) =>
       oferta.raw_data?.attributes?.find((a) => a.id === id)?.value_name || null;
 
@@ -134,29 +111,19 @@ async function processarUmaOferta() {
       .filter(Boolean)
       .join("\n");
 
+    // Tenta enviar com imagem, se falhar, envia apenas texto para não travar o bot
     let postadoSucesso = false;
-
-    // Log antes da ação que costuma causar o ECONNRESET
-    console.log("📸 [WhatsApp] Tentando carregar/enviar mídia...");
-
     try {
       if (oferta.imagem_high_res) {
-        console.log(`🔗 [WhatsApp] Baixando imagem: ${oferta.imagem_high_res}`);
         const media = await MessageMedia.fromUrl(oferta.imagem_high_res);
-        console.log("📤 [WhatsApp] Enviando mensagem com imagem...");
         await client.sendMessage(chatID, media, { caption: mensagem });
       } else {
-        console.log("📤 [WhatsApp] Enviando apenas texto...");
         await client.sendMessage(chatID, mensagem);
       }
       postadoSucesso = true;
     } catch (mediaError) {
       console.error(
-        "⚠️ [WhatsApp] Erro de mídia/envio principal:",
-        mediaError.message,
-      );
-      console.log(
-        "🔄 [WhatsApp] Tentativa de fallback: Enviando apenas texto...",
+        "⚠️ Erro ao carregar mídia, tentando enviar apenas texto...",
       );
       await client.sendMessage(chatID, mensagem);
       postadoSucesso = true;
@@ -166,27 +133,20 @@ async function processarUmaOferta() {
       await pool.query("UPDATE ofertas SET postado = TRUE WHERE id = $1", [
         oferta.id,
       ]);
-      console.log(`✅ [WhatsApp] Postado com sucesso: ${oferta.nome_oficial}`);
     }
   } catch (error) {
-    console.error("❌ [WhatsApp] Erro no fluxo de envio:");
-    console.error(error); // Loga o objeto de erro completo com stack trace
+    console.error("[WhatsApp] Erro:", error.message);
   }
 }
 
-/**
- * Inicialização do Cliente
- */
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    // Aumentar o timeout ajuda se o PC estiver lento
-    handleSIGINT: false,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
+      "--disable-dev-shm-usage", // Importante para Linux/Docker
       "--disable-gpu",
       "--no-zygote",
       "--single-process",
@@ -194,37 +154,20 @@ const client = new Client({
   },
 });
 
-client.on("qr", (qr) => {
-  console.log("💡 [WhatsApp] Novo QR Code gerado. Escaneie para conectar:");
-  qrcode.generate(qr, { small: true });
-});
-
-client.on("loading_screen", (percent, message) => {
-  console.log(`⏳ [WhatsApp] Carregando: ${percent}% - ${message}`);
-});
-
-client.on("authenticated", () => {
-  console.log("✅ [WhatsApp] Autenticado com sucesso!");
-});
+client.on("qr", (qr) => qrcode.generate(qr, { small: true }));
 
 client.on("ready", () => {
-  console.log("🚀 [WhatsApp] Bot Online e Pronto!");
   const intervalo = parseInt(process.env.SEND_INTERVAL_MS) || 1800000;
 
-  // Delay maior (10s) para garantir que o WhatsApp carregou todas as conversas internas
-  console.log("⏱️ Aguardando 10 segundos para estabilização...");
-  setTimeout(() => {
-    processarUmaOferta();
-    setInterval(processarUmaOferta, intervalo);
-  }, 10000);
+  setTimeout(processarUmaOferta, 5000);
+
+  setInterval(processarUmaOferta, intervalo);
 });
 
 client.on("disconnected", (reason) => {
-  console.log("❌ [WhatsApp] O bot foi desconectado:", reason);
+  console.log("WhatsApp desconectado:", reason);
 });
 
-console.log(" iniciando o client...");
-client.initialize().catch((err) => {
-  console.error("❌ [WhatsApp] Falha fatal na inicialização:");
-  console.error(err);
-});
+client
+  .initialize()
+  .catch((err) => console.error("Inicialização:", err.message));

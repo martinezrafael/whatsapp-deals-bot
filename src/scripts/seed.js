@@ -61,8 +61,6 @@ const ofertas = [
 
 async function seed() {
   try {
-    console.log("🌱 Iniciando inserção de novas ofertas de teste...");
-
     for (const o of ofertas) {
       const query = `
         INSERT INTO ofertas (
@@ -84,14 +82,11 @@ async function seed() {
         o.sku_ml,
         o.link_afiliado,
       ]);
-
-      console.log(`✅ Adicionado: ${o.titulo}`);
     }
 
-    console.log("\n🚀 Todas as ofertas foram inseridas com sucesso!");
     process.exit();
   } catch (err) {
-    console.error("❌ Erro ao inserir ofertas:", err);
+    console.error("Erro ao inserir ofertas:", err);
     process.exit(1);
   }
 }
