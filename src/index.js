@@ -11,47 +11,83 @@ const client = new Client({
   },
 });
 
+import { gerarLinkAfiliado } from "./services/mercadolivre.js";
+
+// No loop de postagem:
+const linkOriginal =
+  "https://www.mercadolivre.com.br/vaso-sanitario-inteligente-smart-toilet-automatico-tubrax/up/MLBU3790306988";
+const linkAfiliado = await gerarLinkAfiliado(linkOriginal);
+
+console.log(`link de afiliado:${linkAfiliado}`);
+
+// Pega o intervalo do .env ou usa 30min (1800000ms) como padrão de segurança
+const INTERVALO_MS = parseInt(process.env.SEND_INTERVAL_MS) || 1800000;
+
 client.on("qr", (qr) => {
-  console.log("📱 Escaneie o QR Code para iniciar o teste:");
+  console.log("📱 Escaneie o QR Code abaixo:");
   qrcode.generate(qr, { small: true });
 });
 
-client.on("ready", () => {
-  console.log("🚀 Bot conectado! Verificando ofertas...");
-  processarOfertas();
+client.on("ready", async () => {
+  console.log("🚀 Bot conectado!");
+  console.log(`⏱️ Intervalo configurado: ${INTERVALO_MS / 1000 / 60} minutos.`);
+
+  // 1. Dispara a primeira oferta imediatamente
+  await processarUmaOferta();
+
+  // 2. Inicia o ciclo baseado no seu .env
+  setInterval(async () => {
+    await processarUmaOferta();
+  }, INTERVALO_MS);
 });
 
-async function processarOfertas() {
+async function processarUmaOferta() {
   try {
-    const query =
-      "SELECT * FROM ofertas WHERE postado = FALSE ORDER BY data_criacao ASC LIMIT 1";
-    const res = await pool.query(query);
+    // Busca apenas 1 oferta por vez da fila
+    const res = await pool.query(
+      "SELECT * FROM ofertas WHERE postado = FALSE ORDER BY data_criacao ASC LIMIT 1",
+    );
 
     if (res.rows.length === 0) {
-      console.log("📭 Nenhuma oferta pendente no banco.");
+      console.log("📭 Sem ofertas pendentes no momento.");
       return;
     }
 
-    const oferta = res.rows[0];
+    const o = res.rows[0];
     const chatID = process.env.GROUP_ID;
 
-    // Formatação simples apenas com texto
-    const mensagem =
-      `🔥 *OFERTA TESTE* 🔥\n\n` +
-      `*${oferta.titulo}*\n` +
-      `💰 R$ ${oferta.preco}\n\n` +
-      `🛒 Link: ${oferta.link_afiliado}`;
+    // Fallback para campos nulos
+    const clean = (val) => val || "Não informado";
+
+    const mensagem = `☕ *PROMOCOFFE | Oferta Selecionada*
+
+*${o.titulo}* - ${clean(o.subtitulo)}
+${clean(o.descricao_longa)} 🌋
+
+🏆 *Pontuação:* ${clean(o.pontuacao)}
+✨ *Perfil:* ${clean(o.perfil_notas)}
+🍋 *Acidez:* ${clean(o.acidez)}
+🗓️ *Torra:* ${clean(o.torra)}
+⚖️ *Peso:* ${clean(o.peso)}
+
+💰 *Preço:* R$ ${o.preco}
+
+🛒 *COMO COMPRAR:*
+🔍 Copie e cole no buscador do Mercado Livre:
+*${clean(o.sku_ml)}*
+
+🔗 Ou acesse o link direto:
+${o.link_afiliado}`;
 
     await client.sendMessage(chatID, mensagem);
 
-    // Atualiza o banco para não enviar de novo no próximo loop
-    await pool.query("UPDATE ofertas SET postado = TRUE WHERE id = $1", [
-      oferta.id,
-    ]);
+    await pool.query("UPDATE ofertas SET postado = TRUE WHERE id = $1", [o.id]);
 
-    console.log(`✅ Oferta "${oferta.titulo}" enviada para o grupo!`);
+    console.log(
+      `✅ [${new Date().toLocaleTimeString()}] Oferta "${o.titulo}" enviada.`,
+    );
   } catch (error) {
-    console.error("❌ Erro no disparo:", error);
+    console.error("❌ Erro no processamento:", error);
   }
 }
 
