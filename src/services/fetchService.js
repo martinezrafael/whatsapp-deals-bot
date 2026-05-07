@@ -17,13 +17,10 @@ export const fetchService = async (
     headers: { ...headers },
   };
 
-  // 1. Verificação inteligente do corpo da requisição
   if (body && !["GET", "HEAD"].includes(method.toUpperCase())) {
     if (body instanceof URLSearchParams) {
-      // Se for URLSearchParams, o fetch define o Content-Type de formulário automaticamente
       config.body = body;
     } else {
-      // Se for um objeto comum, envia como JSON
       config.headers["Content-Type"] = "application/json";
       config.body = JSON.stringify(body);
     }
@@ -31,9 +28,7 @@ export const fetchService = async (
 
   const response = await fetch(url, config);
 
-  // 2. Debug de erro aprimorado
   if (!response.ok) {
-    // Tenta capturar o JSON de erro da API (ex: o que o ML diz que está errado)
     const errorBody = await response.json().catch(() => null);
 
     if (errorBody) {
