@@ -49,30 +49,3 @@ export const mlSearchConfig = {
     limit: 4,
   },
 };
-
-export const mlAffiliateConfig = {
-  endpoint:
-    "https://www.mercadolivre.com.br/affiliate-program/api/v2/affiliates/createLink",
-  tag: process.env.ML_AFFILIATE_TAG || "rafaelmartinezcontato",
-  headers: {
-    accept: "application/json, text/plain, */*",
-    "accept-language": "pt-BR,pt;q=0.7",
-    "content-type": "application/json",
-    priority: "u=1, i",
-    "sec-ch-ua": '"Brave";v="147", "Not.A/Brand";v="8", "Chromium";v="147"',
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-model": '""',
-    "sec-ch-ua-platform": '"Linux"',
-    "sec-ch-ua-platform-version": '""',
-    "sec-fetch-dest": "empty",
-    "sec-fetch-mode": "cors",
-    "sec-fetch-site": "same-origin",
-    "sec-gpc": "1",
-    Referer: "https://www.mercadolivre.com.br/afiliados/linkbuilder",
-    Origin: "https://www.mercadolivre.com.br",
-    "user-agent":
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "x-csrf-token": process.env.ML_CSRF_TOKEN,
-    cookie: process.env.ML_AFFILIATE_COOKIE,
-  },
-};
