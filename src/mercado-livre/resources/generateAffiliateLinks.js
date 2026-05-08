@@ -14,7 +14,7 @@ export const generateAffiliateLinks = async (
   const urlList = Array.isArray(urls) ? urls : [urls];
 
   // Manter CHUNK_SIZE baixo ajuda a evitar bloqueios e erros 400
-  const CHUNK_SIZE = 5;
+  const CHUNK_SIZE = 20;
   const results = {
     status: 200,
     urls: [],

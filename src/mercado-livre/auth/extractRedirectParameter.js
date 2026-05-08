@@ -32,30 +32,3 @@ export const extractRedirectParameter = async (
     throw error;
   }
 };
-
-//const url = `https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=${process.env.ML_CLIENT_ID}&redirect_uri=${process.env.ML_REDIRECT_URI}`;
-
-//const headers = {
-//accept:
-//"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-//"accept-language": "pt-BR,pt;q=0.7",
-//priority: "u=0, i",
-//"sec-ch-ua": '"Brave";v="147", "Not.A/Brand";v="8", "Chromium";v="147"',
-//"sec-ch-ua-mobile": "?0",
-//"sec-ch-ua-model": '""',
-//"sec-ch-ua-platform": '"Linux"',
-//"sec-ch-ua-platform-version": '""',
-//"sec-fetch-dest": "document",
-//"sec-fetch-mode": "navigate",
-//"sec-fetch-site": "none",
-//"sec-fetch-user": "?1",
-//"sec-gpc": "1",
-//"upgrade-insecure-requests": "1",
-//cookie: process.env.COOKIE_URL_GET_CODE,
-//};
-
-//const response = await fetchService(url, headers, null, "GET");
-
-//const finalUrl = response.url;
-//const urlObj = new URL(finalUrl);
-//const codigo = urlObj.searchParams.get("code");

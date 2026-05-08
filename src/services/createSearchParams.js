@@ -15,10 +15,3 @@ export const createSearchParams = (data) => {
 
   return params;
 };
-
-//const params = new URLSearchParams();
-//params.append("grant_type", "authorization_code");
-//params.append("client_id", "8907271086207187");
-//params.append("client_secret", "n818QhN704atDs2TP4Qn4wRioNsIaMjf");
-//params.append("code", code);
-// params.append("redirect_uri", "https://github.com/martinezrafael");

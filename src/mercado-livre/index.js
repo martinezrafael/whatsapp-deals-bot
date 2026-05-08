@@ -5,7 +5,7 @@ import {
   getLastToken,
   saveProductsToDb,
   getProductsFromDb,
-  saveAffiliateLinksToDb, // Certifique-se de exportar esta nova função
+  saveAffiliateLinksToDb,
 } from "../database/dbService.js";
 import { authenticateAndFetchToken } from "./auth/authOrchestrator.js";
 import { searchResources } from "./resources/searchResources.js";
@@ -55,43 +55,52 @@ async function runFlow() {
       return;
     }
 
-    // 3. Persistência dos produtos brutos para referência
+    // 3. Persistência e Recuperação dos dados do Banco
     await saveProductsToDb(pool, searchData.results);
     const produtosParaLink = await getProductsFromDb(pool);
 
-    // 4. Preparação das URLs para o Link Builder
+    // 4. Preparação das URLs e Criação do Mapa de Referência
     const baseUrlML = "https://www.mercadolivre.com.br";
+    const productsMap = {};
+
     const urlsOriginais = generateResourceUrls(
       produtosParaLink,
       baseUrlML,
       (item) => {
         const slug = gerarSlug(item.name);
-        return `${slug}/p/${item.ml_id}`;
+        const path = `${slug}/p/${item.ml_id}`;
+
+        // Montamos a URL completa exatamente como a generateResourceUrls fará
+        // para usá-la como chave no Mapa
+        const fullUrl = `${baseUrlML}/${path}`;
+        productsMap[fullUrl] = item;
+
+        return path;
       },
     );
 
-    // 5. Geração de Links de Afiliado (API Interna/Builder)
+    console.log(`🔗 ${urlsOriginais.length} URLs preparadas para conversão.`);
+
+    // 5. Geração de Links de Afiliado (Chamada à API de Link Builder)
     const linksAfiliados = await generateAffiliateLinks(urlsOriginais);
 
-    // 6. Salvamento das Ofertas Finais no Banco de Dados
+    // 6. Salvamento das Ofertas com dados enriquecidos
     if (linksAfiliados?.urls?.length > 0) {
       console.log(
-        `[Affiliate] ${linksAfiliados.total_success} links gerados. Salvando ofertas...`,
+        `[Affiliate] ${linksAfiliados.total_success} links convertidos com sucesso.`,
       );
 
-      await saveAffiliateLinksToDb(pool, linksAfiliados);
+      // Enviamos o Mapa para que o dbService saiba preencher name, image_url, etc.
+      await saveAffiliateLinksToDb(pool, linksAfiliados, productsMap);
 
-      console.log("✅ Fluxo finalizado: Ofertas prontas para postagem.");
+      console.log("✅ Fluxo finalizado: Ofertas e metadados salvos.");
     } else {
-      console.warn(
-        "⚠️ O lote de afiliados não retornou links válidos para salvar.",
-      );
+      console.warn("⚠️ Nenhuma oferta válida foi gerada para salvar no banco.");
     }
   } catch (error) {
     console.error("❌ Erro crítico no fluxo:", error.message);
     process.exit(1);
   } finally {
-    // Encerra a conexão com o banco de dados
     await pool.end();
     console.log("🔌 Conexão com o banco encerrada.");
   }
