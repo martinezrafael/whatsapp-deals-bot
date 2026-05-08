@@ -63,6 +63,7 @@ async function runFlow() {
 
       const linksAfiliados = await generateAffiliateLinks(urlsOriginais);
 
+      console.log(linksAfiliadosUrlsOriginais);
       console.log(linksAfiliados);
     } else {
       console.log("Nenhum produto encontrado para o termo.");

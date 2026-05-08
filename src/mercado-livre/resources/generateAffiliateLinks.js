@@ -1,8 +1,7 @@
 import { fetchService } from "../../services/fetchService.js";
 
 /**
- * Gera links de afiliado dinâmicos para o Mercado Livre.
- * Filtra erros de URL não permitida (111) e retorna apenas as short_urls.
+ * Gera links de afiliado dinâmicos para o Mercado Livre com suporte a múltiplos links (chunking).
  * @param {string|string[]} urls - Uma string ou array de strings com as URLs dos produtos.
  * @param {string} tag - Sua tag de afiliado.
  */
@@ -14,8 +13,14 @@ export const generateAffiliateLinks = async (
     "https://www.mercadolivre.com.br/affiliate-program/api/v2/affiliates/createLink";
   const urlList = Array.isArray(urls) ? urls : [urls];
 
-  const CHUNK_SIZE = 5;
-  const finalShortUrls = [];
+  const CHUNK_SIZE = 5; // Limite de links por requisição para evitar Erro 400
+  const results = {
+    status: 200,
+    urls: [],
+    total_items: 0,
+    total_success: 0,
+    total_error: 0,
+  };
 
   try {
     for (let i = 0; i < urlList.length; i += CHUNK_SIZE) {
@@ -29,6 +34,7 @@ export const generateAffiliateLinks = async (
         method: "POST",
         headers: {
           accept: "application/json, text/plain, */*",
+          "accept-language": "pt-BR,pt;q=0.7",
           "content-type": "application/json",
           origin: "https://www.mercadolivre.com.br",
           referer: "https://www.mercadolivre.com.br/afiliados/linkbuilder",
@@ -46,26 +52,24 @@ export const generateAffiliateLinks = async (
 
       const data = await response.json();
 
-      if (response.ok && data.urls) {
-        // Filtra os itens com erro 111 e mapeia apenas para a short_url
-        const validBatchUrls = data.urls
-          .filter((item) => item.error_code !== 111 && item.short_url)
-          .map((item) => item.short_url);
-
-        finalShortUrls.push(...validBatchUrls);
+      if (response.ok) {
+        results.urls.push(...(data.urls || []));
+        results.total_success += data.total_success || 0;
+        results.total_error += data.total_error || 0;
       } else {
         console.error(`[AffiliateGen] Erro no lote: ${response.status}`, data);
       }
 
+      // Pequena pausa para não ser bloqueado (Rate Limiting)
       if (i + CHUNK_SIZE < urlList.length) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 
-    // Retorna o array simples contendo apenas as URLs curtas
-    return finalShortUrls;
+    results.total_items = results.urls.length;
+    return results;
   } catch (error) {
-    console.error(`[AffiliateGen] Erro fatal: ${error.message}`);
-    return [];
+    console.error(`[AffiliateGen] Erro fatal na requisição: ${error.message}`);
+    return null;
   }
 };

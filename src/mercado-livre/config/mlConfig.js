@@ -1,4 +1,4 @@
-// src/mercado-livre/config/mlConfig.js
+import "dotenv/config";
 
 export const mlAuthConfig = {
   authUrl: `https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=${process.env.ML_CLIENT_ID}&redirect_uri=${process.env.ML_REDIRECT_URI}`,
@@ -75,23 +75,4 @@ export const mlAffiliateConfig = {
     "x-csrf-token": process.env.ML_CSRF_TOKEN,
     cookie: process.env.ML_AFFILIATE_COOKIE,
   },
-};
-
-export const mlGenerateAffiliateLinks = {
-  endpoint:
-    "https://www.mercadolivre.com.br/affiliate-program/api/v2/affiliates/createLink",
-  chunkSize: 5,
-  delayBetweenChunks: 1000,
-  headers: {
-    accept: "application/json, text/plain, */*",
-    "content-type": "application/json",
-    origin: "https://www.mercadolivre.com.br",
-    referer: "https://www.mercadolivre.com.br/afiliados/linkbuilder",
-    "user-agent":
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "x-csrf-token": process.env.ML_CSRF_TOKEN,
-    cookie: process.env.ML_AFFILIATE_COOKIE,
-  },
-
-  excludeErrorCodes: [111],
 };
