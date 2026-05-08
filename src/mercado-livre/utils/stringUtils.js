@@ -1,4 +1,4 @@
-const gerarSlug = (texto) => {
+export const gerarSlug = (texto) => {
   return texto
     .toString()
     .normalize("NFD")

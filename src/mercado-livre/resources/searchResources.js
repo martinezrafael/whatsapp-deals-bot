@@ -1,5 +1,5 @@
-import { createSearchParams } from "../../services/createSearchParams";
-import { fetchService } from "../../services/fetchService";
+import { createSearchParams } from "../../services/createSearchParams.js";
+import { fetchService } from "../../services/fetchService.js";
 
 /**
  * Generic search function for protected API resources.
@@ -36,14 +36,3 @@ export const searchResources = async (
     throw error;
   }
 };
-
-//const response = await fetch(
-//`https://api.mercadolibre.com/products/search?status=active&site_id=MLB&limit=100&q=${termo}`,
-//{
-//method: "GET",
-//headers: {
-//Authorization: `Bearer ${accessToken}`,
-//accept: "application/json",
-//},
-//},
-//);
