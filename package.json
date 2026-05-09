@@ -8,7 +8,9 @@
     "start": "node src/core/index.js",
     "dev": "nodemon src/core/index.js",
     "seed:tokens": "node src/scripts/seedTokens.js",
-    "test:catalog": "node src/scripts/teste-catalog.js"
+    "test:catalog": "node src/scripts/teste-catalog.js",
+    "lint:check": "prettier --check .",
+    "lint:fix": "prettier --write ."
   },
   "keywords": [
     "whatsapp",
@@ -24,5 +26,8 @@
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "^1.34.7"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3"
   }
 }

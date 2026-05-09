@@ -27,19 +27,15 @@ async function runFlow() {
       mlTokenConfig,
     );
 
-    if (!authPayload?.accessToken) {
-      throw new Error("O provedor não retornou um token válido.");
-    }
-
     await saveToDb(pool, "auth_tokens", {
       code: authPayload.code,
       access_token: authPayload.accessToken,
     });
 
     const currentToken = await getLastToken(pool);
-    if (!currentToken) throw new Error("Falha ao recuperar o token do banco.");
 
-    const termoDeBusca = "Café Especial";
+    const termoDeBusca = process.env.TERMO_DE_BUSCA;
+
     const queryParams = { ...mlSearchConfig.defaultParams, q: termoDeBusca };
 
     const searchData = await searchResources(
@@ -48,14 +44,16 @@ async function runFlow() {
       queryParams,
     );
 
-    if (!searchData.results || searchData.results.length === 0) {
+    if (!searchData.results) {
       return;
     }
 
     await saveProductsToDb(pool, searchData.results);
+
     const produtosParaLink = await getProductsFromDb(pool);
 
-    const baseUrlML = "https://www.mercadolivre.com.br";
+    const baseUrlML = process.env.BASE_URL_ML;
+
     const productsMap = {};
 
     const urlsOriginais = generateResourceUrls(
