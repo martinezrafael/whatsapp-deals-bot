@@ -13,8 +13,7 @@ export const generateAffiliateLinks = async (
     "https://www.mercadolivre.com.br/affiliate-program/api/v2/affiliates/createLink";
   const urlList = Array.isArray(urls) ? urls : [urls];
 
-  // Manter CHUNK_SIZE baixo ajuda a evitar bloqueios e erros 400
-  const CHUNK_SIZE = 20;
+  const CHUNK_SIZE = 40;
   const results = {
     status: 200,
     urls: [],
