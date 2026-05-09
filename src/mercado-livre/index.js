@@ -6,6 +6,7 @@ import {
   saveProductsToDb,
   getProductsFromDb,
   saveAffiliateLinksToDb,
+  saveCafeContent,
 } from "../database/dbService.js";
 import { authenticateAndFetchToken } from "./auth/authOrchestrator.js";
 import { searchResources } from "./resources/searchResources.js";
@@ -18,13 +19,10 @@ import {
   mlSearchConfig,
 } from "./config/mlConfig.js";
 
-import { getGroqChatCompletion } from "../ai-engine/groq.js";
+import { createContent } from "../services/createContent.js";
 
 async function runFlow() {
   try {
-    console.log("🚀 Iniciando fluxo de integração Mercado Livre...");
-
-    // 1. Autenticação e Atualização de Token
     const authPayload = await authenticateAndFetchToken(
       mlAuthConfig,
       mlTokenConfig,
@@ -42,7 +40,6 @@ async function runFlow() {
     const currentToken = await getLastToken(pool);
     if (!currentToken) throw new Error("Falha ao recuperar o token do banco.");
 
-    // 2. Busca de Produtos (API Oficial)
     const termoDeBusca = "Café Especial";
     const queryParams = { ...mlSearchConfig.defaultParams, q: termoDeBusca };
 
@@ -57,13 +54,9 @@ async function runFlow() {
       return;
     }
 
-    // 3. Persistência e Recuperação dos dados do Banco
     await saveProductsToDb(pool, searchData.results);
     const produtosParaLink = await getProductsFromDb(pool);
 
-    console.log(produtosParaLink);
-
-    // 4. Preparação das URLs e Criação do Mapa de Referência
     const baseUrlML = "https://www.mercadolivre.com.br";
     const productsMap = {};
 
@@ -74,8 +67,6 @@ async function runFlow() {
         const slug = gerarSlug(item.name);
         const path = `${slug}/p/${item.ml_id}`;
 
-        // Montamos a URL completa exatamente como a generateResourceUrls fará
-        // para usá-la como chave no Mapa
         const fullUrl = `${baseUrlML}/${path}`;
         productsMap[fullUrl] = item;
 
@@ -83,32 +74,25 @@ async function runFlow() {
       },
     );
 
-    console.log(`🔗 ${urlsOriginais.length} URLs preparadas para conversão.`);
-
-    // 5. Geração de Links de Afiliado (Chamada à API de Link Builder)
     const linksAfiliados = await generateAffiliateLinks(urlsOriginais);
 
-    // 6. Salvamento das Ofertas com dados enriquecidos
     if (linksAfiliados?.urls?.length > 0) {
-      console.log(
-        `[Affiliate] ${linksAfiliados.total_success} links convertidos com sucesso.`,
-      );
-
-      // Enviamos o Mapa para que o dbService saiba preencher name, image_url, etc.
       await saveAffiliateLinksToDb(pool, linksAfiliados, productsMap);
 
-      console.log("✅ Fluxo finalizado: Ofertas e metadados salvos.");
+      const content = await createContent();
+
+      console.log(content);
+
+      const savedContent = await saveCafeContent(pool, content);
     } else {
-      console.warn("⚠️ Nenhuma oferta válida foi gerada para salvar no banco.");
+      console.warn("Nenhuma oferta válida foi gerada para salvar no banco.");
     }
   } catch (error) {
-    console.error("❌ Erro crítico no fluxo:", error.message);
+    console.error({ message: error.message });
     process.exit(1);
   } finally {
     await pool.end();
-    console.log("🔌 Conexão com o banco encerrada.");
   }
 }
 
-// Execução do fluxo
 await runFlow();
