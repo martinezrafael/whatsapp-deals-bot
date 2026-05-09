@@ -18,6 +18,8 @@ import {
   mlSearchConfig,
 } from "./config/mlConfig.js";
 
+import { getGroqChatCompletion } from "../ai-engine/groq.js";
+
 async function runFlow() {
   try {
     console.log("🚀 Iniciando fluxo de integração Mercado Livre...");
@@ -58,6 +60,8 @@ async function runFlow() {
     // 3. Persistência e Recuperação dos dados do Banco
     await saveProductsToDb(pool, searchData.results);
     const produtosParaLink = await getProductsFromDb(pool);
+
+    console.log(produtosParaLink);
 
     // 4. Preparação das URLs e Criação do Mapa de Referência
     const baseUrlML = "https://www.mercadolivre.com.br";
