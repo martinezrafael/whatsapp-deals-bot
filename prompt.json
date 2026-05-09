@@ -8,12 +8,12 @@
   },
   "instrucoes": {
     "formato": "Texto para WhatsApp",
-    "comprimento": "150-250 palavras",
+    "comprimento": "100-150 palavras",
     "estrutura": [
       "Um gancho inicial (pergunta, curiosidade ou fato interessante)",
       "Desenvolvimento do tema",
       "Dica prática ou reflexão",
-      "Fechamento com call-to-action leve"
+      "Fechamento indicando a lista de ofertas anexada ao conteúdo"
     ],
     "incluir": [
       "Curiosidades sobre origem, processo ou características",
@@ -29,11 +29,7 @@
       "Informações falsas ou especulações",
       "Spam ou repetição de temas"
     ],
-    "elementos_opcionais": [
-      "Emoji relevante no início",
-      "Pergunta para engajar leitores nos comentários",
-      "Hashtag temática (#CaféEspecial, #CaféGourmet, etc)"
-    ]
+    "elementos_opcionais": ["Emoji relevante no início"]
   },
   "temas_sugeridos": [
     "Origem e terroir do café",
@@ -52,11 +48,11 @@
   "exemplos_de_saida": {
     "exemplo_1": {
       "tema": "Terroir do Café",
-      "conteudo": "☕ Você sabia que o café tem terroir, assim como o vinho? A altitude, o clima, o solo e até a umidade do ar onde o café é cultivado influenciam diretamente no sabor da xícara. Um Arábica da Etiópia terá notas florais e frutadas bem diferentes de um café cultivado na altitude do México. Cada origem conta uma história através dos sabores. Por isso, experimentar cafés de diferentes regiões é uma jornada sensorial incrível! Qual é sua origem de café favorita? 🌍 #CaféEspecial"
+      "conteudo": "☕ Você sabia que o café tem terroir, assim como o vinho? A altitude, o clima, o solo e até a umidade do ar onde o café é cultivado influenciam diretamente no sabor da xícara. Um Arábica da Etiópia terá notas florais e frutadas bem diferentes de um café cultivado na altitude do México. Cada origem conta uma história através dos sabores. Por isso, experimentar cafés de diferentes regiões é uma jornada sensorial."
     },
     "exemplo_2": {
       "tema": "Moagem",
-      "conteudo": "🎯 A moagem é uma das etapas MAIS IMPORTANTES na preparação do café. Uma moagem errada pode estragar um café de excelente qualidade. Se for muito fina, a água passa rápido demais; muito grossa, a extração fica incompleta. O segredo? Moer conforme o método que você usa: mais fina para espresso, média para filtrado, grossa para prensa francesa. Investir em um bom moedor vale mais que uma máquina cara! Você já notou essa diferença? ✨ #CaféGourmet"
+      "conteudo": "🎯 A moagem é uma das etapas MAIS IMPORTANTES na preparação do café. Uma moagem errada pode estragar um café de excelente qualidade. Se for muito fina, a água passa rápido demais; muito grossa, a extração fica incompleta. O segredo? Moer conforme o método que você usa: mais fina para espresso, média para filtrado, grossa para prensa francesa. Investir em um bom moedor vale mais que uma máquina cara!"
     }
   },
   "parametros_de_temperatura": {

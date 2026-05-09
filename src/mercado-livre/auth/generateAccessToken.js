@@ -40,12 +40,3 @@ export const generateAccessToken = async (url, headers, params) => {
     return null;
   }
 };
-
-//const response = await fetch("https://api.mercadolibre.com/oauth/token", {
-//method: "POST",
-//headers: {
-//Accept: "application/json",
-//"Content-Type": "application/x-www-form-urlencoded",
-//},
-//body: params,
-//});

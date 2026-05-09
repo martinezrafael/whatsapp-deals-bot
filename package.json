@@ -5,7 +5,7 @@
   "author": "Rafael Molina Martinez",
   "main": "index.js",
   "scripts": {
-    "start": "node src/core/index.js",
+    "start": "node src/mercado-livre/index.js",
     "dev": "nodemon src/core/index.js",
     "seed:tokens": "node src/scripts/seedTokens.js",
     "test:catalog": "node src/scripts/teste-catalog.js",

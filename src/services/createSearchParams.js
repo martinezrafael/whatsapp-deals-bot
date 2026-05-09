@@ -1,8 +1,3 @@
-/**
- * Converts a plain object into URLSearchParams.
- * @param {object} data - The object containing key-value pairs.
- * @returns {URLSearchParams}
- */
 export const createSearchParams = (data) => {
   const params = new URLSearchParams();
 

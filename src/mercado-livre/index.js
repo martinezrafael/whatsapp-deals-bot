@@ -7,6 +7,8 @@ import {
   getProductsFromDb,
   saveAffiliateLinksToDb,
   saveCafeContent,
+  getAffiliateLinksToDb,
+  getPendingCafeContent,
 } from "../database/dbService.js";
 import { authenticateAndFetchToken } from "./auth/authOrchestrator.js";
 import { searchResources } from "./resources/searchResources.js";
@@ -19,6 +21,22 @@ import {
   mlSearchConfig,
 } from "./config/mlConfig.js";
 import { createContent } from "../services/createContent.js";
+import { sendMessage } from "../services/sendMessage.js";
+import { Client } from "whatsapp-web.js";
+import qrcode from "qrcode-terminal";
+
+const client = new Client();
+
+client.on("qr", (qr) => {
+  qrcode.generate(qr, { small: true });
+});
+
+client.on("ready", async () => {
+  console.log("Client is ready!");
+  await runFlow();
+});
+
+client.initialize();
 
 async function runFlow() {
   try {
@@ -26,18 +44,14 @@ async function runFlow() {
       mlAuthConfig,
       mlTokenConfig,
     );
-
     await saveToDb(pool, "auth_tokens", {
       code: authPayload.code,
       access_token: authPayload.accessToken,
     });
 
     const currentToken = await getLastToken(pool);
-
     const termoDeBusca = process.env.TERMO_DE_BUSCA;
-
     const queryParams = { ...mlSearchConfig.defaultParams, q: termoDeBusca };
-
     const searchData = await searchResources(
       mlSearchConfig.baseUrl,
       currentToken,
@@ -49,13 +63,9 @@ async function runFlow() {
     }
 
     await saveProductsToDb(pool, searchData.results);
-
     const produtosParaLink = await getProductsFromDb(pool);
-
     const baseUrlML = process.env.BASE_URL_ML;
-
     const productsMap = {};
-
     const urlsOriginais = generateResourceUrls(
       produtosParaLink,
       baseUrlML,
@@ -69,12 +79,13 @@ async function runFlow() {
     );
 
     const linksAfiliados = await generateAffiliateLinks(urlsOriginais);
-
     if (linksAfiliados?.urls?.length > 0) {
       await saveAffiliateLinksToDb(pool, linksAfiliados, productsMap);
-
       const content = await createContent();
       await saveCafeContent(pool, content);
+      const conteudoGerado = await getPendingCafeContent(pool);
+      const offers = await getAffiliateLinksToDb(pool);
+      await sendMessage(client, process.env.GROUP_ID, conteudoGerado, offers);
     }
   } catch (error) {
     console.error({ message: error.message });
@@ -83,5 +94,3 @@ async function runFlow() {
     await pool.end();
   }
 }
-
-await runFlow();
