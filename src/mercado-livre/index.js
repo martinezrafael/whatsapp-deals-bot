@@ -18,7 +18,6 @@ import {
   mlTokenConfig,
   mlSearchConfig,
 } from "./config/mlConfig.js";
-
 import { createContent } from "../services/createContent.js";
 
 async function runFlow() {
@@ -50,7 +49,6 @@ async function runFlow() {
     );
 
     if (!searchData.results || searchData.results.length === 0) {
-      console.log(`[Busca] Nenhum produto encontrado para: "${termoDeBusca}"`);
       return;
     }
 
@@ -66,10 +64,8 @@ async function runFlow() {
       (item) => {
         const slug = gerarSlug(item.name);
         const path = `${slug}/p/${item.ml_id}`;
-
         const fullUrl = `${baseUrlML}/${path}`;
         productsMap[fullUrl] = item;
-
         return path;
       },
     );
@@ -80,12 +76,7 @@ async function runFlow() {
       await saveAffiliateLinksToDb(pool, linksAfiliados, productsMap);
 
       const content = await createContent();
-
-      console.log(content);
-
-      const savedContent = await saveCafeContent(pool, content);
-    } else {
-      console.warn("Nenhuma oferta válida foi gerada para salvar no banco.");
+      await saveCafeContent(pool, content);
     }
   } catch (error) {
     console.error({ message: error.message });
