@@ -1,0 +1,231 @@
+{
+  "keywords": "Chocolate Intenso",
+  "paging": {
+    "total": 10000,
+    "limit": 1,
+    "offset": 0,
+    "last": "MLB26146601"
+  },
+  "results": [
+    {
+      "id": "MLB26146601",
+      "catalog_product_id": "MLB26146601",
+      "domain_id": "MLB-CHOCOLATES",
+      "name": "Barra de Chocolate Intenso 65% Cacau | 80g Chocolate Dengo chocolate intenso 80 g",
+      "parent_id": "MLB26146581",
+      "settings": {
+        "content": "fixed",
+        "listing_strategy": "catalog_required",
+        "exclusive": false
+      },
+      "children_ids": [],
+      "attributes": [
+        {
+          "id": "MANUFACTURER",
+          "name": "Fabricante",
+          "value_id": "13126616",
+          "value_name": "Dengo",
+          "values": [
+            {
+              "id": "13126616",
+              "name": "Dengo"
+            }
+          ]
+        },
+        {
+          "id": "BRAND",
+          "name": "Marca",
+          "value_id": "13126616",
+          "value_name": "Dengo",
+          "values": [
+            {
+              "id": "13126616",
+              "name": "Dengo"
+            }
+          ]
+        },
+        {
+          "id": "LINE",
+          "name": "Linha",
+          "value_id": "13486360",
+          "value_name": "Chocolate",
+          "values": [
+            {
+              "id": "13486360",
+              "name": "Chocolate"
+            }
+          ]
+        },
+        {
+          "id": "NAME",
+          "name": "Nome",
+          "value_id": "59260467",
+          "value_name": "Barra de Chocolate Intenso 65% Cacau | 80g",
+          "values": [
+            {
+              "id": "59260467",
+              "name": "Barra de Chocolate Intenso 65% Cacau | 80g"
+            }
+          ]
+        },
+        {
+          "id": "FLAVOR",
+          "name": "Sabor",
+          "value_id": "11815769",
+          "value_name": "Chocolate intenso",
+          "values": [
+            {
+              "id": "11815769",
+              "name": "Chocolate intenso"
+            }
+          ]
+        },
+        {
+          "id": "NET_WEIGHT",
+          "name": "Peso líquido",
+          "value_id": "3734172",
+          "value_name": "80 g",
+          "values": [
+            {
+              "id": "3734172",
+              "name": "80 g"
+            }
+          ]
+        },
+        {
+          "id": "UNIT_WEIGHT",
+          "name": "Peso da unidade",
+          "value_id": "2767",
+          "value_name": "80 g",
+          "values": [
+            {
+              "id": "2767",
+              "name": "80 g"
+            }
+          ]
+        },
+        {
+          "id": "SALE_FORMAT",
+          "name": "Formato de venda",
+          "value_id": "1359391",
+          "value_name": "Unidade",
+          "values": [
+            {
+              "id": "1359391",
+              "name": "Unidade"
+            }
+          ]
+        },
+        {
+          "id": "UNITS_PER_PACK",
+          "name": "Unidades por kit",
+          "value_id": "2726554",
+          "value_name": "1",
+          "values": [
+            {
+              "id": "2726554",
+              "name": "1"
+            }
+          ]
+        },
+        {
+          "id": "UNITS_PER_PACKAGE",
+          "name": "Unidades por embalagem",
+          "value_id": "2726554",
+          "value_name": "1",
+          "values": [
+            {
+              "id": "2726554",
+              "name": "1"
+            }
+          ]
+        },
+        {
+          "id": "CHOCOLATE_FORMAT",
+          "name": "Formato do chocolate",
+          "value_id": "5790023",
+          "value_name": "Tablete",
+          "values": [
+            {
+              "id": "5790023",
+              "name": "Tablete"
+            }
+          ]
+        },
+        {
+          "id": "PRODUCT_CONSERVATION",
+          "name": "Conservação do produto",
+          "value_id": "10792872",
+          "value_name": "Temperatura ambiente",
+          "values": [
+            {
+              "id": "10792872",
+              "name": "Temperatura ambiente"
+            }
+          ]
+        },
+        {
+          "id": "GTIN",
+          "name": "Código universal de produto",
+          "value_id": "23098008",
+          "value_name": "7898961337180",
+          "values": [
+            {
+              "id": "23098008",
+              "name": "7898961337180"
+            }
+          ]
+        },
+        {
+          "id": "IS_VEGAN",
+          "name": "É vegano",
+          "value_id": "242085",
+          "value_name": "Sim",
+          "values": [
+            {
+              "id": "242085",
+              "name": "Sim"
+            }
+          ],
+          "meta": {
+            "value": true
+          }
+        }
+      ],
+      "status": "active",
+      "short_description": {
+        "type": "plaintext",
+        "content": "Chocolate 65% cacau, do tamanho da sua vontade para deixar seu dia ainda mais alegre! Seu chocolate em boas mãos: Este é um dengo do Edvaldo Crispim, lá de Floresta Azul na Bahia."
+      },
+      "pictures": [
+        {
+          "id": "841674-MLA89726627514_082025",
+          "url": "https://http2.mlstatic.com/D_NQ_NP_841674-MLA89726627514_082025-F.jpg",
+          "max_width": "699",
+          "max_height": "639"
+        },
+        {
+          "id": "611958-MLU71096128974_082023",
+          "url": "https://http2.mlstatic.com/D_NQ_NP_611958-MLU71096128974_082023-F.jpg",
+          "suggested_for_picker": [],
+          "max_width": "500",
+          "max_height": "500"
+        },
+        {
+          "id": "717130-MLU71096128970_082023",
+          "url": "https://http2.mlstatic.com/D_NQ_NP_717130-MLU71096128970_082023-F.jpg",
+          "suggested_for_picker": [],
+          "max_width": "500",
+          "max_height": "500"
+        }
+      ],
+      "authority_types": ["COMMUNITY"],
+      "date_created": "2023-08-17T06:53:37Z",
+      "last_updated": "2025-09-03T13:33:56Z",
+      "quality_type": "COMPLETE",
+      "product_standard": false,
+      "search_type": "KEYWORD"
+    }
+  ],
+  "query_type": "KEYWORDS"
+}

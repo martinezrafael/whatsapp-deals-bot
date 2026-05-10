@@ -7,5 +7,11 @@ export const sendMessage = async (
   offers,
   offersTitle,
 ) => {
-  await client.sendMessage(chatId, formatter(content, offers, offersTitle));
+  const sentMessage = await client.sendMessage(
+    chatId,
+    formatter(content, offers, offersTitle),
+  );
+
+  // Retorna o objeto da mensagem para quem chamou a função
+  return sentMessage;
 };

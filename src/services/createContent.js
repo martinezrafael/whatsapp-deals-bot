@@ -9,7 +9,9 @@ export const createContent = async () => {
       throw new Error("Nenhum conteúdo foi gerado pela IA");
     }
 
-    return content;
+    const parsed = JSON.parse(content);
+
+    return parsed;
   } catch (error) {
     console.error("Erro ao criar conteúdo:", error);
     throw error;

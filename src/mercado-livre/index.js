@@ -9,6 +9,11 @@ import {
   saveCafeContent,
   getAffiliateLinksToDb,
   getPendingCafeContent,
+  markCafeContentAsSent,
+  logCafeContentSend,
+  recordCafeThemeUsed,
+  getCafeContentHistory,
+  getCafeContentStats,
 } from "../database/dbService.js";
 import { authenticateAndFetchToken } from "./auth/authOrchestrator.js";
 import { searchResources } from "./resources/searchResources.js";
@@ -81,11 +86,39 @@ async function runFlow() {
     const linksAfiliados = await generateAffiliateLinks(urlsOriginais);
     if (linksAfiliados?.urls?.length > 0) {
       await saveAffiliateLinksToDb(pool, linksAfiliados, productsMap);
+
       const content = await createContent();
-      await saveCafeContent(pool, content);
+      await saveCafeContent(pool, content.conteudo, content.tema);
+
       const conteudoGerado = await getPendingCafeContent(pool);
       const offers = await getAffiliateLinksToDb(pool);
-      await sendMessage(client, process.env.GROUP_ID, conteudoGerado, offers);
+
+      const sentMsg = await sendMessage(
+        client,
+        process.env.GROUP_ID,
+        conteudoGerado,
+        offers,
+      );
+
+      if (sentMsg) {
+        const info = await sentMsg.getInfo();
+        console.log("Informações de leitura:", info);
+      }
+
+      await markCafeContentAsSent(pool, conteudoGerado.id);
+
+      await logCafeContentSend(
+        pool,
+        conteudoGerado.id,
+        process.env.GROUP_ID,
+        process.env.GROUP_NAME,
+      );
+
+      await recordCafeThemeUsed(pool, content.tema, conteudoGerado.id);
+
+      await getCafeContentHistory(pool);
+
+      await getCafeContentStats(pool);
     }
   } catch (error) {
     console.error({ message: error.message });

@@ -18,28 +18,21 @@ function loadPromptConfig() {
 
 function buildSystemPrompt(config) {
   const { sistema, instrucoes } = config;
-
   return `Você é um ${sistema.role}.
-
 Objetivo: ${sistema.objetivo}
 Tom: ${sistema.tom}
 Linguagem: ${sistema.linguagem}
 Público: ${sistema.público}
-
 INSTRUÇÕES:
 - Formato: ${instrucoes.formato}
 - Comprimento: ${instrucoes.comprimento}
 - Estrutura: ${instrucoes.estrutura.join(" → ")}
-
 TEMAS A INCLUIR:
 ${instrucoes.incluir.map((item) => `• ${item}`).join("\n")}
-
 TEMAS A EVITAR:
 ${instrucoes.evitar.map((item) => `• ${item}`).join("\n")}
-
 ELEMENTOS OPCIONAIS:
 ${instrucoes.elementos_opcionais.map((item) => `• ${item}`).join("\n")}
-
 TEMAS SUGERIDOS PARA INSPIRAÇÃO:
 ${config.temas_sugeridos.map((tema) => `• ${tema}`).join("\n")}
 `;
@@ -47,7 +40,6 @@ ${config.temas_sugeridos.map((tema) => `• ${tema}`).join("\n")}
 
 export async function getGroqChatCompletion() {
   const config = loadPromptConfig();
-
   if (!config) {
     throw new Error(
       "Não foi possível carregar o arquivo prompt.json. Verifique se ele existe.",
@@ -64,8 +56,7 @@ export async function getGroqChatCompletion() {
       },
       {
         role: "user",
-        content:
-          "Gere um conteúdo original e interessante sobre café especial para ser compartilhado em um grupo de WhatsApp.",
+        content: config.instrucoes_para_api.parametro_prompt,
       },
     ],
     model: "openai/gpt-oss-20b",
