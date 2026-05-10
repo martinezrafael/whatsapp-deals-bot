@@ -1,9 +1,3 @@
-/**
- * @file index.js
- * @description Ponto de entrada da aplicação. Gerencia o fluxo de autenticação no Mercado Livre,
- * busca de produtos, geração de links de afiliados, criação de conteúdo via IA e envio para o WhatsApp.
- */
-
 import "dotenv/config";
 import qrcode from "qrcode-terminal";
 import { Client } from "whatsapp-web.js";
@@ -15,83 +9,72 @@ import {
   mlTokenConfig,
 } from "./mercado-livre/config/constants.js";
 
-// Recursos e Serviços
+// Serviços de API
 import { searchResources } from "./mercado-livre/resources/searchResources.js";
 import { prepareProductUrls } from "./mercado-livre/resources/prepareProductUrls.js";
 import { generateAffiliateLinks } from "./mercado-livre/resources/generateAffiliateLinks.js";
+import { authenticateAndFetchToken } from "./mercado-livre/auth/authenticateAndFetchToken.js";
+
+// Serviços de WhatsApp e Conteúdo
 import { sendMessage } from "./whatsapp/connector.js";
 import { contentGenerator } from "./content-generation/contentGenerator.js";
 
 // Repositories
 import {
-  authenticateAndSave,
   saveAuthToken,
   getLastToken,
-  getSystemHealthStats,
 } from "./database/repositories/authRepository.js";
-
 import {
   saveProductsToDb,
   saveOffersToDb,
-  getAllProducts,
   getAllOffersWithProducts,
   markOfferAsSent,
-  getInventoryStats,
 } from "./database/repositories/productRepository.js";
-
 import {
   saveAiContent,
   getLastAiContent,
   LogsAiContent,
-  getAllLogsWithContent,
   saveThemeAiContent,
-  getAllThemesWithContent,
-  getRecentlyAiContent,
-  getAiContentStatusOverview,
-  getAiContentProductionStats,
-  getDeliveryStats,
-  getTopUsageStats,
 } from "./database/repositories/contentRepository.js";
 
-/** @type {string} ID do grupo de destino do WhatsApp */
 const groupId = process.env.GROUP_ID;
-
-/** @type {string} Nome do grupo de destino para logs */
 const groupName = process.env.GROUP_NAME;
 
 /**
- * Executa o fluxo principal da aplicação.
+ * Orquestra o fluxo de autenticação: busca dados na API e persiste no Banco de Dados.
  *
- * Passos:
- * 1. Inicializa o cliente WhatsApp e aguarda conexão via QR Code.
- * 2. Autentica na API do Mercado Livre.
- * 3. Busca produtos baseados em um termo definido.
- * 4. Gera links de afiliado para os produtos encontrados.
- * 5. Cria conteúdo textual via IA.
- * 6. Formata e envia a mensagem para o grupo do WhatsApp.
+ * @async
+ * @function handleAuthentication
+ * @returns {Promise<object>} O registro de autenticação salvo.
+ * @throws {Error} Caso a API não retorne os dados necessários.
+ */
+const handleAuthentication = async () => {
+  const authPayload = await authenticateAndFetchToken(
+    mlAuthConfig,
+    mlTokenConfig,
+  );
+  if (!authPayload) throw new Error("Falha ao obter tokens da API.");
+  return await saveAuthToken(authPayload.code, authPayload.accessToken);
+};
+
+/**
+ * Executa o ciclo principal do bot (Autenticação -> Busca -> IA -> WhatsApp).
  *
  * @async
  * @function run
- * @throws {Error} Caso ocorra falha na autenticação ou conexão.
  * @returns {Promise<void>}
  */
 export const run = async () => {
   console.log("[Fluxo] Iniciando aplicação...");
-
   const whatsappClient = new Client();
 
-  /**
-   * Promessa que resolve quando o cliente WhatsApp está autenticado e pronto.
-   * @type {Promise<void>}
-   */
   const waitForWhatsApp = new Promise((resolve) => {
     whatsappClient.on("qr", (qr) => {
-      console.log("[WhatsApp] QR Code gerado. Escaneie para continuar:");
+      console.log("[WhatsApp] QR Code gerado:");
       qrcode.generate(qr, { small: true });
     });
-
     whatsappClient.on("ready", () => {
-      console.log("[WhatsApp] Cliente pronto e conectado!");
+      console.log("[WhatsApp] Conectado!");
       resolve();
     });
   });
@@ -100,78 +83,46 @@ export const run = async () => {
   await waitForWhatsApp;
 
   try {
-    // --- 2. Autenticação e Token ---
-    console.log("[ML] Autenticando e atualizando tokens...");
-    await authenticateAndSave(mlAuthConfig, mlTokenConfig);
+    console.log("[ML] Autenticando e sincronizando banco...");
+    await handleAuthentication();
 
     const accessToken = await getLastToken();
-    if (!accessToken) {
-      throw new Error("Falha ao recuperar accessToken.");
-    }
+    if (!accessToken) throw new Error("AccessToken não encontrado no banco.");
 
-    // --- 3. Busca e Salvamento de Produtos ---
     const queryParams = {
       ...mlSearchConfig.defaultParams,
       q: process.env.TERMO_DE_BUSCA || "ofertas",
     };
 
-    console.log(`[ML] Buscando produtos: "${queryParams.q}"...`);
     const products = await searchResources(
       mlSearchConfig.baseUrl,
       accessToken,
       queryParams,
     );
+    if (products) await saveProductsToDb(products);
 
-    if (products) {
-      console.log(
-        `[Banco] Salvando ${products.results?.length || 0} produtos...`,
-      );
-      await saveProductsToDb(products);
-    }
-
-    // --- 4. Preparação de URLs e Links de Afiliados ---
-    console.log("[Fluxo] Preparando URLs dos produtos...");
     const { urls, productsMap } = await prepareProductUrls();
-
-    if (urls && urls.length > 0) {
-      console.log(`[ML] Gerando links de afiliado para ${urls.length} URLs...`);
-      const affiliateLinksGenerated = await generateAffiliateLinks(urls);
-
-      console.log("[Banco] Salvando ofertas geradas...");
-      await saveOffersToDb(affiliateLinksGenerated, productsMap);
+    if (urls?.length > 0) {
+      const links = await generateAffiliateLinks(urls);
+      await saveOffersToDb(links, productsMap);
     }
 
-    // --- 5. Geração de Conteúdo IA ---
-    console.log("[IA] Solicitando criação de conteúdo...");
     const createdContent = await contentGenerator();
-    if (createdContent) {
-      console.log("[Banco] Salvando conteúdo gerado pela IA...");
+    if (createdContent)
       await saveAiContent(createdContent.content, createdContent.theme);
-    }
 
-    // --- 6. Envio das Mensagens ---
-    console.log("[Banco] Recuperando ofertas e conteúdo para envio...");
     const offers = await getAllOffersWithProducts();
     const lastAiContent = await getLastAiContent();
 
-    if (lastAiContent && offers && offers.length > 0) {
-      console.log(`[WhatsApp] Enviando para o grupo: ${groupName}...`);
-
+    if (lastAiContent && offers?.length > 0) {
       await sendMessage(whatsappClient, groupId, lastAiContent.content, offers);
-
-      // Finalização e logs de envio
       await markOfferAsSent(offers[0].product_id);
       await LogsAiContent(lastAiContent.id, groupId, groupName);
-
-      if (lastAiContent.theme) {
+      if (lastAiContent.theme)
         await saveThemeAiContent(lastAiContent.theme, lastAiContent.id);
-      }
-
-      console.log("[Fluxo] Ciclo finalizado.");
-    } else {
-      console.warn("[Fluxo] Nada a enviar (Sem ofertas ou conteúdo).");
+      console.log("[Fluxo] Ciclo finalizado com sucesso.");
     }
   } catch (error) {
-    console.error("[Fluxo] Erro no processo:", error.message);
+    console.error("[Fluxo] Erro crítico:", error.message);
   }
 };

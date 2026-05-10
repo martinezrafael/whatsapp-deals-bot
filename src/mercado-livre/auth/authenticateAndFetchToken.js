@@ -2,60 +2,33 @@ import { extractRedirectParameter } from "./extractRedirectParameter.js";
 import { generateAccessToken } from "./generateAccessToken.js";
 
 /**
- * Orquestrador genérico para gerenciar o fluxo completo de obtenção de código de autorização e troca por token OAuth2.
+ * Orquestrador para gerenciar o fluxo de obtenção de código e troca por token via API.
  *
  * @async
  * @function authenticateAndFetchToken
- * @param {object} authConfig - Configuração para extração do código.
- * @param {string} authConfig.authUrl - URL de autorização para extração do redirecionamento.
- * @param {object} authConfig.authHeaders - Cabeçalhos HTTP para a requisição de autorização.
- * @param {string} [authConfig.paramName="code"] - Nome do parâmetro de consulta que contém o código.
- * @param {object} tokenConfig - Configuração para troca do código pelo token de acesso.
- * @param {string} tokenConfig.tokenUrl - URL do endpoint de token do provedor.
- * @param {object} tokenConfig.tokenHeaders - Cabeçalhos HTTP para a requisição de token.
- * @param {object} tokenConfig.baseParams - Parâmetros base (client_id, client_secret, redirect_uri, etc.).
- * @returns {Promise<object|null>} Objeto contendo o código, o token de acesso e o timestamp, ou null em caso de falha.
+ * @param {object} authConfig - Configurações para extração do código de autorização.
+ * @param {object} tokenConfig - Configurações para a troca do código pelo token de acesso.
+ * @returns {Promise<{code: string, accessToken: string}|null>} Objeto com code e accessToken, ou null.
  */
 export const authenticateAndFetchToken = async (authConfig, tokenConfig) => {
   try {
-    const { authUrl, authHeaders, paramName = "code" } = authConfig;
-    const { tokenUrl, tokenHeaders, baseParams } = tokenConfig;
-
-    // 1. Passo: Extrair o código de autorização
     const code = await extractRedirectParameter(
-      authUrl,
-      authHeaders,
-      paramName,
+      authConfig.authUrl,
+      authConfig.authHeaders,
+      authConfig.paramName,
     );
 
-    if (!code) {
-      throw new Error(`Falha ao extrair "${paramName}" do redirecionamento.`);
-    }
-
-    // 2. Passo: Preparar parâmetros e trocar pelo token de acesso
-    const fullTokenParams = {
-      ...baseParams,
-      [paramName]: code,
-    };
+    if (!code) throw new Error("Falha ao extrair código.");
 
     const accessToken = await generateAccessToken(
-      tokenUrl,
-      tokenHeaders,
-      fullTokenParams,
+      tokenConfig.tokenUrl,
+      tokenConfig.tokenHeaders,
+      { ...tokenConfig.baseParams, code },
     );
 
-    if (!accessToken) {
-      throw new Error("Falha ao recuperar o token de acesso do provedor.");
-    }
-
-    // 3. Retornar um payload genérico
-    return {
-      code,
-      accessToken,
-      timestamp: new Date().toISOString(),
-    };
+    return accessToken ? { code, accessToken } : null;
   } catch (error) {
-    console.error("[authenticateAndFetchToken] Erro no fluxo:", error.message);
+    console.error("[AuthFlow] Erro no fluxo de API:", error.message);
     return null;
   }
 };
