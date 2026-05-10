@@ -33,7 +33,6 @@ const startApp = async () => {
   try {
     /**
      * Executa o fluxo principal e retorna a instância ativa do cliente WhatsApp.
-     * Importante: A função run() em src/index.js deve conter 'return whatsappClient'.
      */
     whatsappClient = await run();
 
@@ -43,8 +42,14 @@ const startApp = async () => {
   } catch (err) {
     console.error(`[Fatal] Erro durante a execução do ciclo: ${err.message}`);
 
-    // Tenta enviar alerta para o grupo de monitoramento se o cliente estiver disponível
-    if (whatsappClient && GRUPO_MONITORAMENTO) {
+    /**
+     * RESGATE DO CLIENTE:
+     * Se o run() falhou, a variável 'whatsappClient' acima estará undefined.
+     * Tentamos recuperar a instância do WhatsApp que anexamos ao erro no index.js.
+     */
+    const activeClient = whatsappClient || err.client;
+
+    if (activeClient && GRUPO_MONITORAMENTO) {
       try {
         const msgAlerta =
           `🚨 *PROMOCOFFE: ALERTA DE FALHA*\n\n` +
@@ -52,14 +57,20 @@ const startApp = async () => {
           `❌ *Erro:* _${err.message}_\n\n` +
           `🔧 *Status:* O sistema segue ativo e tentará novamente no próximo ciclo agendado.`;
 
-        await whatsappClient.sendMessage(GRUPO_MONITORAMENTO, msgAlerta);
-        console.log("[Monitoramento] Alerta enviado para o grupo com sucesso.");
+        await activeClient.sendMessage(GRUPO_MONITORAMENTO, msgAlerta);
+        console.log(
+          "[Monitoramento] ✅ Alerta enviado para o grupo com sucesso.",
+        );
       } catch (sendError) {
         console.error(
-          "[Monitoramento] Falha ao enviar alerta via WhatsApp:",
+          "[Monitoramento] ❌ Falha ao enviar alerta via WhatsApp:",
           sendError.message,
         );
       }
+    } else {
+      console.error(
+        "[Monitoramento] ⚠️ Alerta não enviado: Cliente WhatsApp não inicializado ou ID ausente.",
+      );
     }
   } finally {
     const nextExecution = new Date(Date.now() + EXECUTION_INTERVAL);
@@ -67,10 +78,10 @@ const startApp = async () => {
       `[Agendamento] Próximo envio programado para: ${nextExecution.toLocaleTimeString()}`,
     );
 
-    // Agenda a próxima execução (setTimeout mantém o processo vivo para o PM2)
+    // Agenda a próxima execução
     setTimeout(startApp, EXECUTION_INTERVAL);
   }
 };
 
-// Inicia o primeiro ciclo imediatamente
+// Inicia o app
 startApp();

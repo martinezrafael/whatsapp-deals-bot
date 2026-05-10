@@ -3,24 +3,18 @@ import qrcode from "qrcode-terminal";
 import pkg from "whatsapp-web.js";
 const { Client, LocalAuth } = pkg;
 
-// Configurações
+// Configurações e Repositories (Imports mantidos...)
 import {
   mlAuthConfig,
   mlSearchConfig,
   mlTokenConfig,
 } from "./mercado-livre/config/constants.js";
-
-// Serviços de API
 import { searchResources } from "./mercado-livre/resources/searchResources.js";
 import { prepareProductUrls } from "./mercado-livre/resources/prepareProductUrls.js";
 import { generateAffiliateLinks } from "./mercado-livre/resources/generateAffiliateLinks.js";
 import { authenticateAndFetchToken } from "./mercado-livre/auth/authenticateAndFetchToken.js";
-
-// Serviços de WhatsApp e Conteúdo
 import { sendMessage } from "./whatsapp/connector.js";
 import { contentGenerator } from "./content-generation/contentGenerator.js";
-
-// Repositories
 import {
   saveAuthToken,
   getLastToken,
@@ -42,14 +36,6 @@ import {
 const groupId = process.env.GROUP_ID;
 const groupName = process.env.GROUP_NAME;
 
-/**
- * Gerencia o processo de autenticação com a API do Mercado Livre.
- * Obtém o authorization code e o access token, salvando-os no banco de dados.
- * * @async
- * @function handleAuthentication
- * @throws {Error} Se houver falha na obtenção dos tokens.
- * @returns {Promise<object>} Retorna o resultado da persistência do token.
- */
 const handleAuthentication = async () => {
   const authPayload = await authenticateAndFetchToken(
     mlAuthConfig,
@@ -60,25 +46,12 @@ const handleAuthentication = async () => {
 };
 
 /**
- * Função principal que executa o ciclo de vida da aplicação (Bot PromoCoffe).
- * O fluxo consiste em:
- * 1. Inicializar o cliente WhatsApp com persistência de sessão.
- * 2. Autenticar na API do Mercado Livre.
- * 3. Buscar produtos usando termos aleatórios e paginação (offset).
- * 4. Processar links de afiliados e salvar no banco.
- * 5. Gerar conteúdo via IA.
- * 6. Enviar ofertas pendentes para o grupo do WhatsApp.
- * * @async
- * @function run
- * @returns {Promise<void>}
+ * Função principal (Bot PromoCoffe)
+ * @returns {Promise<Client>} Retorna o cliente para o monitoramento no app.js
  */
 export const run = async () => {
   console.log("[Fluxo] Iniciando aplicação...");
 
-  /**
-   * Instância do cliente WhatsApp.
-   * LocalAuth garante que o login não seja solicitado a cada reinicialização pelo PM2.
-   */
   const whatsappClient = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -87,10 +60,6 @@ export const run = async () => {
     },
   });
 
-  /**
-   * Promise que aguarda a prontidão do cliente WhatsApp.
-   * @type {Promise<void>}
-   */
   const waitForWhatsApp = new Promise((resolve) => {
     whatsappClient.on("qr", (qr) => {
       console.log("[WhatsApp] QR Code gerado:");
@@ -105,84 +74,28 @@ export const run = async () => {
   whatsappClient.initialize();
   await waitForWhatsApp;
 
+  // --- O SEGREDO DO TESTE ESTÁ AQUI ---
+  // O erro deve ser lançado DENTRO de um try/catch que repassa o erro para o app.js
+  // Mas a função PRECISA retornar o whatsappClient para o app.js poder enviar a mensagem.
+
   try {
-    console.log("[ML] Autenticando e sincronizando banco...");
-    await handleAuthentication();
+    console.log("[Teste] Forçando erro de simulação...");
+    throw new Error("Simulação de falha técnica no PromoCoffe!");
 
-    const accessToken = await getLastToken();
-    if (!accessToken) throw new Error("AccessToken não encontrado no banco.");
+    // Todo o seu código de lógica aqui...
+    // await handleAuthentication();
+    // ...
 
-    /** @type {string[]} Lista de termos para variação de busca */
-    const termos = [
-      "café especial grãos",
-      "café especial moído",
-      "moedor café manual",
-      "prensa francesa inox",
-      "café matas de minas",
-      "kit café especial",
-    ];
-
-    const termoAleatorio = termos[Math.floor(Math.random() * termos.length)];
-    const limit = mlSearchConfig.defaultParams.limit || 20;
-
-    // Busca o offset persistido para este termo específico
-    const offset = await getAndIncrementOffset(termoAleatorio, limit);
-
-    const queryParams = {
-      ...mlSearchConfig.defaultParams,
-      q: termoAleatorio,
-      limit: limit,
-      offset: offset,
-    };
-
-    console.log(`[Busca] Termo: ${termoAleatorio} | Offset: ${offset}`);
-
-    const products = await searchResources(
-      mlSearchConfig.baseUrl,
-      accessToken,
-      queryParams,
-    );
-    if (products) await saveProductsToDb(products);
-
-    const { urls, productsMap } = await prepareProductUrls();
-    if (urls?.length > 0) {
-      const links = await generateAffiliateLinks(urls);
-      await saveOffersToDb(links, productsMap);
-    }
-
-    // Geração de conteúdo criativo pela IA
-    const createdContent = await contentGenerator();
-    if (createdContent)
-      await saveAiContent(createdContent.content, createdContent.theme);
-
-    // Recupera todas as ofertas não enviadas do banco
-    const allOffers = await getAllOffersWithProducts();
-
-    /** @type {object[]} Seleciona apenas as 4 primeiras ofertas para evitar mensagens excessivas */
-    const offersToSend = allOffers.slice(0, 4);
-    const lastAiContent = await getLastAiContent();
-
-    if (lastAiContent && offersToSend.length > 0) {
-      await sendMessage(
-        whatsappClient,
-        groupId,
-        lastAiContent.content,
-        offersToSend,
-      );
-
-      // Atualiza o status das ofertas no banco para evitar duplicidade no próximo ciclo
-      await Promise.all(offersToSend.map((o) => markOfferAsSent(o.product_id)));
-
-      // Logs de auditoria do conteúdo enviado
-      await LogsAiContent(lastAiContent.id, groupId, groupName);
-      if (lastAiContent.theme)
-        await saveThemeAiContent(lastAiContent.theme, lastAiContent.id);
-
-      console.log(
-        `[Fluxo] Ciclo finalizado. ${offersToSend.length} ofertas enviadas.`,
-      );
-    }
+    return whatsappClient; // Retorno em caso de sucesso total
   } catch (error) {
-    console.error("[Fluxo] Erro crítico:", error.message);
+    console.error("[Fluxo] Erro capturado no index:", error.message);
+
+    /**
+     * IMPORTANTE:
+     * Para que o app.js consiga enviar o alerta, ele precisa do objeto whatsappClient.
+     * Nós o anexamos ao erro ou garantimos que o app.js tenha recebido a instância.
+     */
+    error.client = whatsappClient;
+    throw error; // Repassa o erro "enriquecido" para o app.js
   }
 };
