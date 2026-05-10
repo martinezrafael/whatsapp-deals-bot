@@ -1,81 +1,48 @@
 import "dotenv/config";
 
 /**
- * Gera links de afiliado para o Mercado Livre em lotes, filtrando URLs não permitidas.
- *
+ * Gera links de afiliado via API oficial do Mercado Livre em lotes de 40.
  * @async
- * @function generateAffiliateLinks
- * @param {string|string[]} urls - Uma única URL ou um array de URLs para converter em links de afiliado.
- * @param {string} [tag="rafaelmartinezcontato"] - A tag de identificação (subID) do afiliado.
- * @returns {Promise<object>} Objeto contendo o status da operação, as URLs geradas, e contadores de sucesso e erro.
+ * @param {string|string[]} urls - Lista de URLs de produtos para encurtar.
+ * @param {string} [tag="rafaelmartinezcontato"] - Tag de afiliado para atribuição.
+ * @returns {Promise<{urls: Object[], total_success: number, total_error: number}>} Resultados da conversão.
  */
 export const generateAffiliateLinks = async (
   urls,
   tag = "rafaelmartinezcontato",
 ) => {
+  const urlList = Array.isArray(urls) ? urls : [urls];
+  const results = { urls: [], total_success: 0, total_error: 0 };
   const endpoint =
     "https://www.mercadolivre.com.br/affiliate-program/api/v2/affiliates/createLink";
-  const urlList = Array.isArray(urls) ? urls : [urls];
 
-  const CHUNK_SIZE = 40;
-  const results = {
-    status: 200,
-    urls: [],
-    total_items: urlList.length,
-    total_success: 0,
-    total_error: 0,
-  };
-
-  try {
-    for (let i = 0; i < urlList.length; i += CHUNK_SIZE) {
-      const currentChunk = urlList.slice(i, i + CHUNK_SIZE);
-
-      console.log(
-        `[AffiliateGen] Processando lote ${Math.floor(i / CHUNK_SIZE) + 1}...`,
-      );
-
+  for (let i = 0; i < urlList.length; i += 40) {
+    const chunk = urlList.slice(i, i + 40);
+    try {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
-          accept: "application/json, text/plain, */*",
-          "accept-language": "pt-BR,pt;q=0.7",
           "content-type": "application/json",
-          origin: "https://www.mercadolivre.com.br",
-          referer: "https://www.mercadolivre.com.br/afiliados/linkbuilder",
-          "user-agent":
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
           "x-csrf-token": process.env.ML_CSRF_TOKEN,
           cookie: process.env.ML_AFFILIATE_COOKIE,
+          "user-agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         },
-        body: JSON.stringify({
-          urls: currentChunk,
-          tag: tag,
-        }),
+        body: JSON.stringify({ urls: chunk, tag }),
       });
 
       const data = await response.json();
-
       if (response.ok && data.urls) {
-        // Filtra links que retornaram erro específico de permissão (code 111)
-        const validLinks = data.urls.filter((item) => item.error_code !== 111);
-
-        results.urls.push(...validLinks);
-        results.total_success += validLinks.length;
-        results.total_error += currentChunk.length - validLinks.length;
-      } else {
-        console.error(`[AffiliateGen] Erro no lote: ${response.status}`, data);
-        results.total_error += currentChunk.length;
+        const valid = data.urls.filter((u) => u.error_code !== 111);
+        results.urls.push(...valid);
+        results.total_success += valid.length;
+        results.total_error += chunk.length - valid.length;
       }
-
-      // Delay de 1 segundo entre lotes para evitar rate limiting
-      if (i + CHUNK_SIZE < urlList.length) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
+    } catch (e) {
+      results.total_error += chunk.length;
     }
 
-    return results;
-  } catch (error) {
-    console.error(`[AffiliateGen] Erro fatal: ${error.message}`);
-    return { ...results, status: 500, error: error.message };
+    if (i + 40 < urlList.length) await new Promise((r) => setTimeout(r, 1000));
   }
+  return results;
 };
