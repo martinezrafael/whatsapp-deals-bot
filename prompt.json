@@ -60,7 +60,7 @@
     "evitar": "Água fervendo ou muito fria"
   },
   "instrucoes_para_api": {
-    "parametro_prompt": "Gere um conteúdo original sobre café especial seguindo as instruções acima. Escolha um tema dos sugeridos ou um tema relacionado a café que seja interessante. IMPORTANTE: A resposta DEVE ser um JSON válido com a seguinte estrutura: {\"tema\": \"[nome do tema com máximo 40 caracteres]\", \"conteudo\": \"[conteúdo gerado]\"}",
+    "parametro_prompt": "Gere um conteúdo original sobre café especial seguindo as instruções acima. Escolha um tema dos sugeridos ou um tema relacionado a café que seja interessante. IMPORTANTE: A resposta DEVE ser um JSON válido com a seguinte estrutura: {\"theme\": \"[nome do tema com máximo 40 caracteres]\", \"content\": \"[conteúdo gerado]\"}",
     "instrucoes_adicionais": [
       "Sempre gere conteúdo novo e original",
       "Varie os temas para não repetir em sequência",

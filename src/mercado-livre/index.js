@@ -5,12 +5,17 @@ import { mlAuthConfig, mlSearchConfig, mlTokenConfig } from "./config/mlConfig";
 import { searchResources } from "./resources/searchResources";
 import {
   authenticateAndSave,
+  getAllOffersWithProducts,
+  LogsAiContent,
+  markOfferAsSent,
+  saveAiContent,
   saveAuthToken,
   saveOffersToDb,
   saveProductsToDb,
 } from "../database/databaseService";
 import { prepareProductUrls } from "./resources/prepareProductUrls";
 import { generateAffiliateLinks } from "./resources/generateAffiliateLinks";
+import { sendMessage } from "../services/sendMessage";
 
 export const run = async () => {
   /*CONFIG WHATSAPP*/
@@ -50,6 +55,30 @@ export const run = async () => {
       const affiliateLinksGenerated = await generateAffiliateLinks(urls);
       await saveOffersToDb(affiliateLinksGenerated);
     }
+  } catch (error) {
+    console.log({ message: error.message });
+  }
+
+  /*CRIA E SALVA OS CONTEÚDOS GERADOS POR IA*/
+  try {
+    const createdContent = createContent();
+    await saveAiContent(createdContent.content, createdContent.theme);
+  } catch (error) {
+    console.log({ message: error.message });
+  }
+
+  /*ENVIA O CONTEUDO GERADO PELA IA E AS OFERTAS VIA WHATSAPP*/
+  const groupId = process.env.GROUP_ID;
+  const groupName = process.env.GROUP_NAME;
+  try {
+    const messageSent = await sendMessage(
+      whatsappClient,
+      groupId,
+      createdContent,
+      await getAllOffersWithProducts(),
+    );
+    await markOfferAsSent(createdContent.id);
+    await LogsAiContent(createdContent.id, groupId, groupName);
   } catch (error) {
     console.log({ message: error.message });
   }
