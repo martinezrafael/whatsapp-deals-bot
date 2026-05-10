@@ -1,14 +1,14 @@
-import { getGroqChatCompletion } from "../ai-engine/groq.js";
+import { getGroqChatCompletion } from "./providers/groq.js";
 
 /**
  * Cria conteúdo utilizando a API do Groq e processa a resposta como JSON.
  *
  * @async
- * @function createContent
+ * @function contentGenerator
  * @returns {Promise<object>} O conteúdo gerado e convertido em objeto JavaScript.
  * @throws {Error} Caso nenhum conteúdo seja gerado pela IA ou ocorra erro no processamento do JSON.
  */
-export const createContent = async () => {
+export const contentGenerator = async () => {
   try {
     const chatCompletion = await getGroqChatCompletion();
     const content = chatCompletion.choices[0]?.message?.content || "";

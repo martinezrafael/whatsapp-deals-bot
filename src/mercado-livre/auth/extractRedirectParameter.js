@@ -1,4 +1,4 @@
-import { fetchService } from "../../services/fetchService.js";
+import { fetchService } from "../../shared/fetchService.js";
 
 /**
  * Extrai um parâmetro específico de uma URL após o processamento de redirecionamentos.

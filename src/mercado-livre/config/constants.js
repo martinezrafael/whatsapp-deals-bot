@@ -1,7 +1,7 @@
 import "dotenv/config";
 
 /**
- * @file mlConfig.js
+ * @file constants.js
  * @description Configurações para integração com a API do Mercado Livre, incluindo fluxos de autenticação, geração de tokens e busca de produtos.
  */
 

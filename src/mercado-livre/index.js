@@ -13,28 +13,45 @@ import {
   mlAuthConfig,
   mlSearchConfig,
   mlTokenConfig,
-} from "./config/mlConfig.js";
+} from "./config/constants.js";
 
 // Recursos e Serviços
 import { searchResources } from "./resources/searchResources.js";
 import { prepareProductUrls } from "./resources/prepareProductUrls.js";
 import { generateAffiliateLinks } from "./resources/generateAffiliateLinks.js";
-import { sendMessage } from "../services/sendMessage.js";
-import { createContent } from "../services/createContent.js";
+import { sendMessage } from "../whatsapp/connector.js";
+import { contentGenerator } from "../content-generation/contentGenerator.js";
 
-// Banco de Dados
+// Repositories
 import {
   authenticateAndSave,
-  getAllOffersWithProducts,
-  getLastAiContent,
+  saveAuthToken,
   getLastToken,
-  LogsAiContent,
-  markOfferAsSent,
-  saveAiContent,
-  saveOffersToDb,
+  getSystemHealthStats,
+} from "../database/repositories/authRepository.js";
+
+import {
   saveProductsToDb,
+  saveOffersToDb,
+  getAllProducts,
+  getAllOffersWithProducts,
+  markOfferAsSent,
+  getInventoryStats,
+} from "../database/repositories/productRepository.js";
+
+import {
+  saveAiContent,
+  getLastAiContent,
+  LogsAiContent,
+  getAllLogsWithContent,
   saveThemeAiContent,
-} from "../database/databaseService.js";
+  getAllThemesWithContent,
+  getRecentlyAiContent,
+  getAiContentStatusOverview,
+  getAiContentProductionStats,
+  getDeliveryStats,
+  getTopUsageStats,
+} from "../database/repositories/contentRepository.js";
 
 /** @type {string} ID do grupo de destino do WhatsApp */
 const groupId = process.env.GROUP_ID;
@@ -126,7 +143,7 @@ export const run = async () => {
 
     // --- 5. Geração de Conteúdo IA ---
     console.log("[IA] Solicitando criação de conteúdo...");
-    const createdContent = await createContent();
+    const createdContent = await contentGenerator();
     if (createdContent) {
       console.log("[Banco] Salvando conteúdo gerado pela IA...");
       await saveAiContent(createdContent.content, createdContent.theme);

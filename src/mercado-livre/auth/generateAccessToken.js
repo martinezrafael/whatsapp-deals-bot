@@ -1,5 +1,5 @@
-import { fetchService } from "../../services/fetchService.js";
-import { createSearchParams } from "../../services/createSearchParams.js";
+import { fetchService } from "../../shared/fetchService.js";
+import { createSearchParams } from "../../shared/createSearchParams.js";
 
 /**
  * Função genérica para trocar dados de autorização por um token de acesso (access token).

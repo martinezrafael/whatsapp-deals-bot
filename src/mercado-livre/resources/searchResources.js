@@ -1,6 +1,6 @@
 import { getLastToken } from "../../database/databaseService.js";
-import { createSearchParams } from "../../services/createSearchParams.js";
-import { fetchService } from "../../services/fetchService.js";
+import { createSearchParams } from "../../shared/createSearchParams.js";
+import { fetchService } from "../../shared/fetchService.js";
 
 /**
  * Função de busca genérica para recursos protegidos da API.
