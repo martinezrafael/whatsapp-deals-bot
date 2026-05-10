@@ -6,6 +6,7 @@ import { searchResources } from "./resources/searchResources";
 import {
   authenticateAndSave,
   saveAuthToken,
+  saveOffersToDb,
   saveProductsToDb,
 } from "../database/databaseService";
 import { prepareProductUrls } from "./resources/prepareProductUrls";
@@ -46,7 +47,10 @@ export const run = async () => {
   try {
     const { urls, productsMap } = await prepareProductUrls();
     if (urls && productsMap) {
-      await generateAffiliateLinks(urls);
+      const affiliateLinksGenerated = await generateAffiliateLinks(urls);
+      await saveOffersToDb(affiliateLinksGenerated);
     }
-  } catch (error) {}
+  } catch (error) {
+    console.log({ message: error.message });
+  }
 };
