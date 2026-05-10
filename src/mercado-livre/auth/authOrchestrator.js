@@ -2,10 +2,10 @@ import { extractRedirectParameter } from "./extractRedirectParameter.js";
 import { generateAccessToken } from "./generateAccessToken.js";
 
 /**
- * Generic orchestrator to handle the full OAuth2 authorization code flow.
- * @param {object} authConfig - Config for extracting the code (url, headers, paramName).
- * @param {object} tokenConfig - Config for exchanging code for token (url, headers, baseParams).
- * @returns {Promise<object|null>} - Object containing the code and the resulting access token.
+ * Orquestrador genérico para gerenciar o fluxo completo de código de autorização OAuth2.
+ * @param {object} authConfig - Configuração para extração do código (url, cabeçalhos, nome do parâmetro).
+ * @param {object} tokenConfig - Configuração para troca do código pelo token (url, cabeçalhos, parâmetros base).
+ * @returns {Promise<object|null>} - Objeto contendo o código e o token de acesso resultante.
  */
 export const authenticateAndFetchToken = async (authConfig, tokenConfig) => {
   try {
@@ -13,7 +13,7 @@ export const authenticateAndFetchToken = async (authConfig, tokenConfig) => {
 
     const { tokenUrl, tokenHeaders, baseParams } = tokenConfig;
 
-    // 1. Step: Extract the authorization code
+    // 1. Passo: Extrair o código de autorização
     const code = await extractRedirectParameter(
       authUrl,
       authHeaders,
@@ -21,11 +21,11 @@ export const authenticateAndFetchToken = async (authConfig, tokenConfig) => {
     );
 
     if (!code) {
-      throw new Error(`Failed to extract "${paramName}" from redirection.`);
+      throw new Error(`Falha ao extrair "${paramName}" do redirecionamento.`);
     }
 
-    // 2. Step: Prepare parameters and exchange for access token
-    // We merge the extracted code into the base parameters (client_id, secret, etc.)
+    // 2. Passo: Preparar parâmetros e trocar pelo token de acesso
+    // Mesclamos o código extraído aos parâmetros base (client_id, secret, etc.)
     const fullTokenParams = {
       ...baseParams,
       [paramName]: code,
@@ -38,17 +38,17 @@ export const authenticateAndFetchToken = async (authConfig, tokenConfig) => {
     );
 
     if (!accessToken) {
-      throw new Error("Failed to retrieve access token from the provider.");
+      throw new Error("Falha ao recuperar o token de acesso do provedor.");
     }
 
-    // 3. Return a generic payload
+    // 3. Retornar um payload genérico
     return {
       code,
       accessToken,
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("[AuthOrchestrator] Flow error:", error.message);
+    console.error("[AuthOrchestrator] Erro no fluxo:", error.message);
     return null;
   }
 };
