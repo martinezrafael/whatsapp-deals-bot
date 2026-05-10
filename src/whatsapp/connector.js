@@ -1,16 +1,14 @@
 import { formatter } from "./formatter.js";
 
 /**
- * Envia uma mensagem formatada para um chat específico e recupera informações de entrega/leitura.
- *
+ * Envia uma mensagem formatada via WhatsApp.
  * @async
- * @function sendMessage
- * @param {object} client - Instância do cliente de mensagens.
- * @param {string} chatId - ID único do chat para onde a mensagem será enviada.
- * @param {string} content - O conteúdo textual base da mensagem.
- * @param {Array<object>} offers - Lista de ofertas a serem formatadas e incluídas.
- * @param {string} offersTitle - Título ou cabeçalho para a seção de ofertas.
- * @returns {Promise<object>} O objeto da mensagem enviada retornado pelo cliente.
+ * @param {Object} client - Instância do cliente.
+ * @param {string} chatId - ID do chat/grupo.
+ * @param {string} content - Texto base.
+ * @param {Array<Object>} offers - Lista de ofertas.
+ * @param {string} [offersTitle] - Título da seção de ofertas.
+ * @returns {Promise<Object>} Objeto da mensagem enviada.
  */
 export const sendMessage = async (
   client,
@@ -26,9 +24,11 @@ export const sendMessage = async (
 
   if (sentMessage) {
     const info = await sentMessage.getInfo();
-    console.log("Informações de leitura:", info);
+    console.log(
+      "[WhatsApp] Mensagem entregue. Info:",
+      info?.deliveryScore || "OK",
+    );
   }
 
-  // Retorna o objeto da mensagem para quem chamou a função
   return sentMessage;
 };
