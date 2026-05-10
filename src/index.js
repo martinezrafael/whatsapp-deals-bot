@@ -13,14 +13,14 @@ import {
   mlAuthConfig,
   mlSearchConfig,
   mlTokenConfig,
-} from "./config/constants.js";
+} from "./mercado-livre/config/constants.js";
 
 // Recursos e Serviços
-import { searchResources } from "./resources/searchResources.js";
-import { prepareProductUrls } from "./resources/prepareProductUrls.js";
-import { generateAffiliateLinks } from "./resources/generateAffiliateLinks.js";
-import { sendMessage } from "../whatsapp/connector.js";
-import { contentGenerator } from "../content-generation/contentGenerator.js";
+import { searchResources } from "./mercado-livre/resources/searchResources.js";
+import { prepareProductUrls } from "./mercado-livre/resources/prepareProductUrls.js";
+import { generateAffiliateLinks } from "./mercado-livre/resources/generateAffiliateLinks.js";
+import { sendMessage } from "./whatsapp/connector.js";
+import { contentGenerator } from "./content-generation/contentGenerator.js";
 
 // Repositories
 import {
@@ -28,7 +28,7 @@ import {
   saveAuthToken,
   getLastToken,
   getSystemHealthStats,
-} from "../database/repositories/authRepository.js";
+} from "./database/repositories/authRepository.js";
 
 import {
   saveProductsToDb,
@@ -37,7 +37,7 @@ import {
   getAllOffersWithProducts,
   markOfferAsSent,
   getInventoryStats,
-} from "../database/repositories/productRepository.js";
+} from "./database/repositories/productRepository.js";
 
 import {
   saveAiContent,
@@ -51,7 +51,7 @@ import {
   getAiContentProductionStats,
   getDeliveryStats,
   getTopUsageStats,
-} from "../database/repositories/contentRepository.js";
+} from "./database/repositories/contentRepository.js";
 
 /** @type {string} ID do grupo de destino do WhatsApp */
 const groupId = process.env.GROUP_ID;
@@ -175,8 +175,3 @@ export const run = async () => {
     console.error("[Fluxo] Erro no processo:", error.message);
   }
 };
-
-// Inicialização do Script
-run().catch((err) => {
-  console.error("[Fluxo] Erro fatal:", err);
-});
