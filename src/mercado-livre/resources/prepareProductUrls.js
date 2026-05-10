@@ -1,7 +1,6 @@
 import "dotenv/config";
-import pool from "../../database/database.js";
+import pool from "../../database/config/pool.js";
 import { getAllProducts } from "../../database/databaseService.js";
-import { getProductsFromDb } from "../db/dbActions.js";
 
 /**
  * Orquestra todo o processo de preparação de produtos: busca no banco,
@@ -9,7 +8,8 @@ import { getProductsFromDb } from "../db/dbActions.js";
  *
  * @async
  * @function prepareProductUrls
- * @returns {Promise<{urls: string[], productsMap: object}>} URLs geradas e mapa de referência dos produtos.
+ * @returns {Promise<{urls: string[], productsMap: Object}>} Objeto contendo o array de URLs geradas e um mapa de referência (URL -> Produto).
+ * @throws {Error} Lança um erro caso ocorra falha na busca ou no processamento dos produtos.
  */
 export const prepareProductUrls = async () => {
   try {
@@ -25,8 +25,14 @@ export const prepareProductUrls = async () => {
 
     // 2. Processa os produtos para gerar as URLs e o mapa
     const urls = produtos.map((item) => {
-      // Lógica interna de geração de Slug
-      const slug = item.name
+      /**
+       * Lógica interna de geração de Slug:
+       * - Normaliza caracteres (remove acentos)
+       * - Converte para minúsculas
+       * - Remove caracteres especiais
+       * - Substitui espaços por hífens
+       */
+      const slug = (item.product_name || item.name || "produto")
         .toString()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
@@ -37,11 +43,15 @@ export const prepareProductUrls = async () => {
         .replace(/\s+/g, "-")
         .replace(/-+/g, "-");
 
-      // Construção do caminho e URL completa
-      const path = `${slug}/p/${item.ml_id}`;
+      // Construção do caminho e URL completa utilizando product_id ou ml_id
+      const productId = item.product_id || item.ml_id;
+      const path = `${slug}/p/${productId}`;
+
+      // Garante que a base não termine com barra para evitar barras duplas
       const cleanBase = baseUrlML.endsWith("/")
         ? baseUrlML.slice(0, -1)
         : baseUrlML;
+
       const fullUrl = `${cleanBase}/${path}`;
 
       // Popula o mapa de referência (URL -> Objeto do Produto)

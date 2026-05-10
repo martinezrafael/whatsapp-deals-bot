@@ -5,9 +5,9 @@ import "dotenv/config";
  *
  * @async
  * @function generateAffiliateLinks
- * @param {string|string[]} urls - Uma única URL ou um array de URLs para converter.
- * @param {string} [tag="rafaelmartinezcontato"] - A tag de identificação do afiliado.
- * @returns {Promise<object>} Objeto contendo o status, as URLs geradas e contadores de sucesso/erro.
+ * @param {string|string[]} urls - Uma única URL ou um array de URLs para converter em links de afiliado.
+ * @param {string} [tag="rafaelmartinezcontato"] - A tag de identificação (subID) do afiliado.
+ * @returns {Promise<object>} Objeto contendo o status da operação, as URLs geradas, e contadores de sucesso e erro.
  */
 export const generateAffiliateLinks = async (
   urls,
@@ -56,10 +56,10 @@ export const generateAffiliateLinks = async (
       const data = await response.json();
 
       if (response.ok && data.urls) {
+        // Filtra links que retornaram erro específico de permissão (code 111)
         const validLinks = data.urls.filter((item) => item.error_code !== 111);
 
         results.urls.push(...validLinks);
-
         results.total_success += validLinks.length;
         results.total_error += currentChunk.length - validLinks.length;
       } else {
@@ -67,6 +67,7 @@ export const generateAffiliateLinks = async (
         results.total_error += currentChunk.length;
       }
 
+      // Delay de 1 segundo entre lotes para evitar rate limiting
       if (i + CHUNK_SIZE < urlList.length) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }

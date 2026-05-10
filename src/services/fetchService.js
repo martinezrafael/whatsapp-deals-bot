@@ -1,10 +1,14 @@
 /**
- * Generic service to handle fetch requests.
- * @param {string} url - The target URL.
- * @param {object} headers - Custom headers.
- * @param {object|URLSearchParams|null} body - The data to be sent.
- * @param {string} method - The HTTP method (GET, POST, etc.).
- * @returns {Promise<Response>} - The fetch response object.
+ * Serviço genérico para lidar com requisições HTTP utilizando a API fetch.
+ *
+ * @async
+ * @function fetchService
+ * @param {string} url - A URL de destino da requisição.
+ * @param {object} [headers={}] - Cabeçalhos personalizados para a requisição.
+ * @param {object|URLSearchParams|null} [body=null] - Os dados a serem enviados no corpo da requisição.
+ * @param {string} [method="GET"] - O método HTTP (GET, POST, PUT, DELETE, etc.).
+ * @returns {Promise<Response>} O objeto de resposta (Response) do fetch.
+ * @throws {Error} Lança um erro se a resposta não for bem-sucedida (status fora do intervalo 200-299).
  */
 export const fetchService = async (
   url,
@@ -17,6 +21,7 @@ export const fetchService = async (
     headers: { ...headers },
   };
 
+  // Configuração do corpo da requisição para métodos que permitem payload
   if (body && !["GET", "HEAD"].includes(method.toUpperCase())) {
     if (body instanceof URLSearchParams) {
       config.body = body;

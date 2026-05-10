@@ -1,13 +1,17 @@
+import { getLastToken } from "../../database/databaseService.js";
 import { createSearchParams } from "../../services/createSearchParams.js";
 import { fetchService } from "../../services/fetchService.js";
-import { getLastToken } from "../db/dbActions.js"; // Ajuste o caminho conforme sua estrutura
 
 /**
  * Função de busca genérica para recursos protegidos da API.
+ *
+ * @async
+ * @function searchResources
  * @param {string} baseUrl - O endpoint base (ex: https://api.mercadolibre.com/products/search).
  * @param {string} accessToken - O token Bearer para autenticação.
- * @param {object} queryParams - Objeto contendo os filtros de busca (q, limit, status, etc.).
- * @returns {Promise<object>} - A resposta JSON processada.
+ * @param {object} [queryParams={}] - Objeto contendo os filtros de busca (q, limit, status, etc.).
+ * @returns {Promise<object>} A resposta JSON processada da API.
+ * @throws {Error} Caso o token não seja fornecido ou a requisição falhe.
  */
 export const searchResources = async (
   baseUrl,
@@ -37,13 +41,15 @@ export const searchResources = async (
 };
 
 /**
- * Orquestra a busca de produtos utilizando o último token disponível e o termo de busca do ambiente.
+ * Orquestra a busca de produtos utilizando o último token disponível e o termo de busca configurado no ambiente.
  *
  * @async
  * @function fetchSearchData
- * @param {object} config - Configuração de busca (baseUrl e defaultParams).
- * @returns {Promise<object>} - Os dados retornados pela API do Mercado Livre.
- * @throws {Error} - Caso o token não seja encontrado ou a busca falhe.
+ * @param {object} config - Configuração de busca.
+ * @param {string} config.baseUrl - URL base para a consulta.
+ * @param {object} config.defaultParams - Parâmetros padrão de busca.
+ * @returns {Promise<object>} Os dados retornados pela API do Mercado Livre.
+ * @throws {Error} Caso o token não seja encontrado no banco ou ocorra erro no fluxo.
  */
 export const fetchSearchData = async (config) => {
   try {
@@ -61,7 +67,7 @@ export const fetchSearchData = async (config) => {
       q: termoDeBusca,
     };
 
-    // 3. Executa a busca utilizando a função genérica acima
+    // 3. Executa a busca utilizando a função genérica
     return await searchResources(config.baseUrl, currentToken, queryParams);
   } catch (error) {
     console.error(

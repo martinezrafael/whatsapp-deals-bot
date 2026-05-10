@@ -8,7 +8,7 @@ import { formatter } from "./formatter.js";
  * @param {object} client - Instância do cliente de mensagens.
  * @param {string} chatId - ID único do chat para onde a mensagem será enviada.
  * @param {string} content - O conteúdo textual base da mensagem.
- * @param {Array} offers - Lista de ofertas a serem formatadas e incluídas.
+ * @param {Array<object>} offers - Lista de ofertas a serem formatadas e incluídas.
  * @param {string} offersTitle - Título ou cabeçalho para a seção de ofertas.
  * @returns {Promise<object>} O objeto da mensagem enviada retornado pelo cliente.
  */

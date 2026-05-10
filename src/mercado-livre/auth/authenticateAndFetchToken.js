@@ -2,15 +2,23 @@ import { extractRedirectParameter } from "./extractRedirectParameter.js";
 import { generateAccessToken } from "./generateAccessToken.js";
 
 /**
- * Orquestrador genérico para gerenciar o fluxo completo de código de autorização OAuth2.
- * @param {object} authConfig - Configuração para extração do código (url, cabeçalhos, nome do parâmetro).
- * @param {object} tokenConfig - Configuração para troca do código pelo token (url, cabeçalhos, parâmetros base).
- * @returns {Promise<object|null>} - Objeto contendo o código e o token de acesso resultante.
+ * Orquestrador genérico para gerenciar o fluxo completo de obtenção de código de autorização e troca por token OAuth2.
+ *
+ * @async
+ * @function authenticateAndFetchToken
+ * @param {object} authConfig - Configuração para extração do código.
+ * @param {string} authConfig.authUrl - URL de autorização para extração do redirecionamento.
+ * @param {object} authConfig.authHeaders - Cabeçalhos HTTP para a requisição de autorização.
+ * @param {string} [authConfig.paramName="code"] - Nome do parâmetro de consulta que contém o código.
+ * @param {object} tokenConfig - Configuração para troca do código pelo token de acesso.
+ * @param {string} tokenConfig.tokenUrl - URL do endpoint de token do provedor.
+ * @param {object} tokenConfig.tokenHeaders - Cabeçalhos HTTP para a requisição de token.
+ * @param {object} tokenConfig.baseParams - Parâmetros base (client_id, client_secret, redirect_uri, etc.).
+ * @returns {Promise<object|null>} Objeto contendo o código, o token de acesso e o timestamp, ou null em caso de falha.
  */
 export const authenticateAndFetchToken = async (authConfig, tokenConfig) => {
   try {
     const { authUrl, authHeaders, paramName = "code" } = authConfig;
-
     const { tokenUrl, tokenHeaders, baseParams } = tokenConfig;
 
     // 1. Passo: Extrair o código de autorização
@@ -25,7 +33,6 @@ export const authenticateAndFetchToken = async (authConfig, tokenConfig) => {
     }
 
     // 2. Passo: Preparar parâmetros e trocar pelo token de acesso
-    // Mesclamos o código extraído aos parâmetros base (client_id, secret, etc.)
     const fullTokenParams = {
       ...baseParams,
       [paramName]: code,
@@ -48,7 +55,7 @@ export const authenticateAndFetchToken = async (authConfig, tokenConfig) => {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("[AuthOrchestrator] Erro no fluxo:", error.message);
+    console.error("[authenticateAndFetchToken] Erro no fluxo:", error.message);
     return null;
   }
 };

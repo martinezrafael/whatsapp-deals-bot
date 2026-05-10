@@ -2,11 +2,15 @@ import { fetchService } from "../../services/fetchService.js";
 import { createSearchParams } from "../../services/createSearchParams.js";
 
 /**
- * Generic function to exchange authorization data for an access token.
- * @param {string} url - The token endpoint URL.
- * @param {object} headers - Required headers (e.g., Content-Type).
- * @param {object} params - Object containing grant_type, client_id, code, etc.
- * @returns {Promise<string|null>} - The access token or null on failure.
+ * Função genérica para trocar dados de autorização por um token de acesso (access token).
+ *
+ * @async
+ * @function generateAccessToken
+ * @param {string} url - A URL do endpoint de token.
+ * @param {object} headers - Cabeçalhos necessários (ex: Content-Type).
+ * @param {object} params - Objeto contendo grant_type, client_id, code, etc.
+ * @param {string} params.code - O código de autorização obrigatório.
+ * @returns {Promise<string|null>} Retorna o access token em caso de sucesso ou null em caso de falha.
  */
 export const generateAccessToken = async (url, headers, params) => {
   try {
@@ -23,8 +27,7 @@ export const generateAccessToken = async (url, headers, params) => {
     const bodyPayload = createSearchParams(params);
 
     // 3. Chamada ao fetchService
-    // Certifique-se de que a ordem dos argumentos no seu fetchService seja:
-    // (url, headers, body, method)
+    // A ordem dos argumentos no fetchService deve ser: (url, headers, body, method)
     const response = await fetchService(url, headers, bodyPayload, "POST");
 
     const data = await response.json();
