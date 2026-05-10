@@ -6,7 +6,10 @@ import { searchResources } from "./resources/searchResources";
 import {
   authenticateAndSave,
   saveAuthToken,
+  saveProductsToDb,
 } from "../database/databaseService";
+import { prepareProductUrls } from "./resources/prepareProductUrls";
+import { generateAffiliateLinks } from "./resources/generateAffiliateLinks";
 
 export const run = async () => {
   /*CONFIG WHATSAPP*/
@@ -29,10 +32,21 @@ export const run = async () => {
     console.log({ message: error.message });
   }
 
-  /*BUSCA DE PRODUTOS*/
+  /*BUSCAR E SALVAR PRODUTOS*/
   try {
     const products = await searchResources(mlSearchConfig);
+    if (products) {
+      await saveProductsToDb(products);
+    }
   } catch (error) {
     console.log({ message: error.message });
   }
+
+  /*BUSCA OS PRODUTOS NO BANCO E CRIA OFERTAS*/
+  try {
+    const { urls, productsMap } = await prepareProductUrls();
+    if (urls && productsMap) {
+      await generateAffiliateLinks(urls);
+    }
+  } catch (error) {}
 };

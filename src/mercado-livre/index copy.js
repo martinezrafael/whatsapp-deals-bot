@@ -18,7 +18,7 @@ import {
 import { authenticateAndFetchToken } from "./auth/authOrchestrator.js";
 import { searchResources } from "./resources/searchResources.js";
 import { gerarSlug } from "./utils/stringUtils.js";
-import { generateResourceUrls } from "./resources/generateResourceUrls.js";
+import { generateResourceUrls } from "./resources/prepareProductUrls.js";
 import { generateAffiliateLinks } from "./resources/generateAffiliateLinks.js";
 import {
   mlAuthConfig,
@@ -70,6 +70,7 @@ async function runFlow() {
     }
 
     await saveProductsToDb(pool, searchData.results);
+
     const produtosParaLink = await getProductsFromDb(pool);
     const baseUrlML = process.env.BASE_URL_ML;
     const productsMap = {};

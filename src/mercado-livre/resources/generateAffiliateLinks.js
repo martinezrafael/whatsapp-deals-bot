@@ -1,9 +1,13 @@
 import "dotenv/config";
 
 /**
- * Gera links de afiliado para o Mercado Livre, filtrando URLs não permitidas (erro 111).
- * @param {string|string[]} urls - Uma string ou array de URLs.
- * @param {string} tag - Sua tag de afiliado.
+ * Gera links de afiliado para o Mercado Livre em lotes, filtrando URLs não permitidas.
+ *
+ * @async
+ * @function generateAffiliateLinks
+ * @param {string|string[]} urls - Uma única URL ou um array de URLs para converter.
+ * @param {string} [tag="rafaelmartinezcontato"] - A tag de identificação do afiliado.
+ * @returns {Promise<object>} Objeto contendo o status, as URLs geradas e contadores de sucesso/erro.
  */
 export const generateAffiliateLinks = async (
   urls,
@@ -52,12 +56,10 @@ export const generateAffiliateLinks = async (
       const data = await response.json();
 
       if (response.ok && data.urls) {
-        // 🛑 FILTRO: Remove itens com error_code: 111 (URL não permitida)
         const validLinks = data.urls.filter((item) => item.error_code !== 111);
 
         results.urls.push(...validLinks);
 
-        // Atualiza contadores baseados no filtro
         results.total_success += validLinks.length;
         results.total_error += currentChunk.length - validLinks.length;
       } else {
@@ -65,7 +67,6 @@ export const generateAffiliateLinks = async (
         results.total_error += currentChunk.length;
       }
 
-      // Delay entre lotes para não sobrecarregar a API
       if (i + CHUNK_SIZE < urlList.length) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
