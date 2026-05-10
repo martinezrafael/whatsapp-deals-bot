@@ -1,6 +1,6 @@
 import "dotenv/config";
 import pool from "../../database/config/pool.js";
-import { getAllProducts } from "../../database/databaseService.js";
+import { getAllProducts } from "../../database/repositories/productRepository.js";
 
 /**
  * Orquestra todo o processo de preparação de produtos: busca no banco,

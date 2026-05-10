@@ -1,4 +1,4 @@
-import { getLastToken } from "../../database/databaseService.js";
+import { getLastToken } from "../../database/repositories/authRepository.js";
 import { createSearchParams } from "../../shared/createSearchParams.js";
 import { fetchService } from "../../shared/fetchService.js";
 
