@@ -75,6 +75,6 @@ export const mlSearchConfig = {
   defaultParams: {
     status: "active",
     site_id: "MLB",
-    limit: 20,
+    limit: 50,
   },
 };
