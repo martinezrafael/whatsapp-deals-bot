@@ -1,87 +1,57 @@
-/**
- * @file app.js
- * @description Entrypoint principal da aplicação com sistema de monitoramento via WhatsApp.
- * Gerencia o loop de execução contínua e envia alertas para o grupo de monitoramento.
- */
-
 import "dotenv/config";
-import { run } from "./src/index.js";
+import { run, initializeWhatsApp } from "./src/index.js"; // Supondo que você separe a inicialização
 
-/**
- * Define o intervalo de execução (2 horas em milissegundos).
- * @constant {number}
- */
 const EXECUTION_INTERVAL = 2 * 60 * 60 * 1000;
-
-/**
- * ID do Grupo de Monitoramento (recuperado do .env)
- * @constant {string}
- */
 const GRUPO_MONITORAMENTO = process.env.GROUP_ID_MONITORING;
 
+let whatsappClient;
+
 /**
- * Inicializa e gerencia o ciclo de vida da aplicação.
- * @async
- * @function startApp
+ * Função que executa apenas a lógica de negócio (curadoria e envio)
  */
-const startApp = async () => {
+const performCuratorship = async () => {
   const timestamp = new Date().toLocaleTimeString();
   console.log(`[${timestamp}] 🚀 Iniciando ciclo de curadoria...`);
 
-  let whatsappClient;
-
   try {
-    /**
-     * Executa o fluxo principal e retorna a instância ativa do cliente WhatsApp.
-     */
-    whatsappClient = await run();
+    // Aqui você passa o cliente já conectado para não ter que criar um novo
+    await run(whatsappClient);
 
     console.log(
       `[${new Date().toLocaleTimeString()}] ✅ Ciclo finalizado com sucesso.`,
     );
   } catch (err) {
-    console.error(`[Fatal] Erro durante a execução do ciclo: ${err.message}`);
+    console.error(`[Fatal] Erro no ciclo: ${err.message}`);
 
-    /**
-     * RESGATE DO CLIENTE:
-     * Se o run() falhou, a variável 'whatsappClient' acima estará undefined.
-     * Tentamos recuperar a instância do WhatsApp que anexamos ao erro no index.js.
-     */
-    const activeClient = whatsappClient || err.client;
-
-    if (activeClient && GRUPO_MONITORAMENTO) {
-      try {
-        const msgAlerta =
-          `🚨 *PROMOCOFFE: ALERTA DE FALHA*\n\n` +
-          `🕒 *Ocorrência:* ${new Date().toLocaleTimeString()}\n` +
-          `❌ *Erro:* _${err.message}_\n\n` +
-          `🔧 *Status:* O sistema segue ativo e tentará novamente no próximo ciclo agendado.`;
-
-        await activeClient.sendMessage(GRUPO_MONITORAMENTO, msgAlerta);
-        console.log(
-          "[Monitoramento] ✅ Alerta enviado para o grupo com sucesso.",
-        );
-      } catch (sendError) {
-        console.error(
-          "[Monitoramento] ❌ Falha ao enviar alerta via WhatsApp:",
-          sendError.message,
-        );
-      }
-    } else {
-      console.error(
-        "[Monitoramento] ⚠️ Alerta não enviado: Cliente WhatsApp não inicializado ou ID ausente.",
-      );
+    if (whatsappClient && GRUPO_MONITORAMENTO) {
+      const msgAlerta = `🚨 *PROMOCOFFE: FALHA*\n❌ *Erro:* _${err.message}_`;
+      await whatsappClient
+        .sendMessage(GRUPO_MONITORAMENTO, msgAlerta)
+        .catch(console.error);
     }
   } finally {
-    const nextExecution = new Date(Date.now() + EXECUTION_INTERVAL);
     console.log(
-      `[Agendamento] Próximo envio programado para: ${nextExecution.toLocaleTimeString()}`,
+      `[Agendamento] Próximo envio em 2h: ${new Date(Date.now() + EXECUTION_INTERVAL).toLocaleTimeString()}`,
     );
-
-    // Agenda a próxima execução
-    setTimeout(startApp, EXECUTION_INTERVAL);
+    setTimeout(performCuratorship, EXECUTION_INTERVAL);
   }
 };
 
-// Inicia o app
-startApp();
+/**
+ * Inicialização única do Bot
+ */
+const bootstrap = async () => {
+  try {
+    console.log("[Setup] Inicializando cliente WhatsApp...");
+    // Inicializa o cliente uma única vez e aguarda o READY
+    whatsappClient = await initializeWhatsApp();
+
+    // Inicia o primeiro ciclo imediatamente
+    performCuratorship();
+  } catch (initialError) {
+    console.error("Falha crítica na inicialização:", initialError);
+    process.exit(1); // Se não conseguir logar, para tudo para o PM2 tentar de novo
+  }
+};
+
+bootstrap();
