@@ -20,13 +20,14 @@ export const sendMessage = async (
 ) => {
   const formattedMessage = formatter(content, offers, offersTitle);
 
-  const sentMessage = await client.sendMessage(chatId, formattedMessage);
+  const sentMessage = await client.sendMessage(chatId, formattedMessage, {
+    linkPreview: false,
+  });
 
   if (sentMessage) {
     const info = await sentMessage.getInfo();
     console.log(
-      "[WhatsApp] Mensagem profissional enviada com sucesso. Status:",
-      info?.deliveryScore || "OK",
+      "[WhatsApp] Mensagem profissional enviada com sucesso sem preview de link.",
     );
   }
 
