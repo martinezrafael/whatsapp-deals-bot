@@ -43,6 +43,42 @@ const groupId = process.env.GROUP_ID;
 const groupName = process.env.GROUP_NAME;
 
 /**
+ * Instância única do cliente WhatsApp para evitar múltiplos processos do Chrome.
+ */
+const whatsappClient = new Client({
+  authStrategy: new LocalAuth(),
+  puppeteer: {
+    handleSIGINT: false,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  },
+});
+
+/**
+ * Inicializa o cliente WhatsApp e aguarda a conexão.
+ * @returns {Promise<Client>}
+ */
+export const initializeWhatsApp = async () => {
+  return new Promise((resolve, reject) => {
+    whatsappClient.on("qr", (qr) => {
+      console.log("[WhatsApp] QR Code gerado:");
+      qrcode.generate(qr, { small: true });
+    });
+
+    whatsappClient.on("ready", () => {
+      console.log("[WhatsApp] Conectado e Pronto!");
+      resolve(whatsappClient);
+    });
+
+    whatsappClient.on("auth_failure", (msg) => {
+      console.error("[WhatsApp] Falha na autenticação:", msg);
+      reject(new Error(msg));
+    });
+
+    whatsappClient.initialize().catch(reject);
+  });
+};
+
+/**
  * Gerencia o processo de autenticação com a API do Mercado Livre.
  */
 const handleAuthentication = async () => {
@@ -55,36 +91,13 @@ const handleAuthentication = async () => {
 };
 
 /**
- * Função principal que executa o ciclo de vida da aplicação (Bot PromoCoffe).
+ * Função principal que executa o ciclo de curadoria.
+ * Utiliza a instância global do whatsappClient.
  * @async
  * @function run
- * @returns {Promise<Client>} Retorna o cliente WhatsApp ativo para o app.js.
+ * @returns {Promise<Client>} Retorna o cliente WhatsApp ativo.
  */
 export const run = async () => {
-  console.log("[Fluxo] Iniciando aplicação...");
-
-  const whatsappClient = new Client({
-    authStrategy: new LocalAuth(),
-    puppeteer: {
-      handleSIGINT: false,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    },
-  });
-
-  const waitForWhatsApp = new Promise((resolve) => {
-    whatsappClient.on("qr", (qr) => {
-      console.log("[WhatsApp] QR Code gerado:");
-      qrcode.generate(qr, { small: true });
-    });
-    whatsappClient.on("ready", () => {
-      console.log("[WhatsApp] Conectado!");
-      resolve();
-    });
-  });
-
-  whatsappClient.initialize();
-  await waitForWhatsApp;
-
   try {
     console.log("[ML] Autenticando e sincronizando banco...");
     await handleAuthentication();
@@ -105,7 +118,6 @@ export const run = async () => {
     const termoAleatorio = termos[Math.floor(Math.random() * termos.length)];
     const limit = mlSearchConfig.defaultParams.limit || 20;
 
-    // Busca o offset persistido para este termo específico
     const offset = await getAndIncrementOffset(termoAleatorio, limit);
 
     const queryParams = {
@@ -130,15 +142,11 @@ export const run = async () => {
       await saveOffersToDb(links, productsMap);
     }
 
-    // Geração de conteúdo criativo pela IA
     const createdContent = await contentGenerator();
     if (createdContent)
       await saveAiContent(createdContent.content, createdContent.theme);
 
-    // Recupera todas as ofertas não enviadas do banco
     const allOffers = await getAllOffersWithProducts();
-
-    /** @type {object[]} Seleciona apenas as 4 primeiras ofertas */
     const offersToSend = allOffers.slice(0, 4);
     const lastAiContent = await getLastAiContent();
 
@@ -150,10 +158,8 @@ export const run = async () => {
         offersToSend,
       );
 
-      // Atualiza o status das ofertas no banco
       await Promise.all(offersToSend.map((o) => markOfferAsSent(o.product_id)));
 
-      // Logs de auditoria
       await LogsAiContent(lastAiContent.id, groupId, groupName);
       if (lastAiContent.theme)
         await saveThemeAiContent(lastAiContent.theme, lastAiContent.id);
@@ -166,8 +172,6 @@ export const run = async () => {
     return whatsappClient;
   } catch (error) {
     console.error("[Fluxo] Erro crítico capturado:", error.message);
-
-    // Anexa o cliente ao erro para que o app.js possa enviar o alerta via WhatsApp
     error.client = whatsappClient;
     throw error;
   }

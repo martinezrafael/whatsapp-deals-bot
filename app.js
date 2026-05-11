@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { run, initializeWhatsApp } from "./src/index.js"; // Supondo que você separe a inicialização
+import { run, initializeWhatsApp } from "./src/index.js";
 
 const EXECUTION_INTERVAL = 2 * 60 * 60 * 1000;
 const GRUPO_MONITORAMENTO = process.env.GROUP_ID_MONITORING;
